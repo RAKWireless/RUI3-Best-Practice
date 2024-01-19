@@ -12,10 +12,11 @@ _**Actions to reduce code size can be**_
 - _**Disable the debug output of the examples code. This is done by setting `#define MY_DEBUG 0` in the file `app.h` of the examples**_
 
 ### ⚠️ INFORMATION 
+#### ⚠️ Usage info
 All examples are prepared to work in either LoRaWAN or LoRa P2P mode.    
 All examples are using AT commands for setup of the device instead of hard-coding the parameters with API calls!.
 
-### ⚠️ INFORMATION
+#### ⚠️ Required libraries not available in the Arduino Library Manager
 Some of the examples are using RUI3 libraries for the WisBlock modules. These libraries are simplified (to save code space on the RAK3172) and can be downloaded as ZIP files from
 - [RAKwireless_RAK1901_Temperature_and_Humidity_SHTC3.zip](https://downloads.rakwireless.com/RUI/RUI3/Library/RAKwireless_RAK1901_Temperature_and_Humidity_SHTC3.zip)
 - [RAKwireless_RAK1902_Pressure_LPS22HB.zip](https://downloads.rakwireless.com/RUI/RUI3/Library/RAKwireless_RAK1902_Pressure_LPS22HB.zip)
@@ -28,7 +29,7 @@ Some of the examples are using RUI3 libraries for the WisBlock modules. These li
 The libraries can be installed with the "Install from ZIP" function in the ArduinoIDE Library Manager.    
 The libraries can be installed as well manually by unzipping the content into the default Arduino Library folder.
 
-### ⚠️ INFORMATION 
+#### ⚠️ Supported RUI3 modules and devices
 The following modules are supported by RUI3:    
 
 | _**WisDuo modules and EVB's**_ | _**WisBlock Core Modules**_ |
@@ -42,7 +43,7 @@ The following modules are supported by RUI3:
 | [RAK11720 stamp module](https://docs.rakwireless.com/Product-Categories/WisDuo/RAK11720-Module/Overview/)     |  |
 | [RAK11721 breakout board](https://docs.rakwireless.com/Product-Categories/WisDuo/RAK11721-Breakout-Board/Overview/)     |  |
 
-### ⚠️ INFORMATION 
+#### ⚠️ Important note about RUI3 version compatibility 
 These examples require at least RUI3 V4.1.0 or newer.
 RUI3 V4.1.0 can be installed by using the Arduino BSP JSON file _**`package_rakwireless.com_rui_index.json`**_ that can be found in the [BSP repository](https://github.com/RAKWireless/RAKwireless-Arduino-BSP-Index).     
 Installation guides for Arduino IDE and Visual Studio Code can be found in the [RAK Documentation Center](https://docs.rakwireless.com/RUI3/Supported-IDE/).
