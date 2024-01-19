@@ -123,11 +123,11 @@ void loop()
 }
 ```
 
-## send_handler & send_packet
+## sensor_handler & send_packet
 
 This functions are where the action is happening. 
 
-**`send_handler`** is called by the timer. First, if in LoRaWAN mode, it checks whether the node has already joined the network. Then, in this example, it is reading the analog values from the RAK5811 and putting the data together with the battery value in the payload.    
+**`sensor_handler`** is called by the timer. First, if in LoRaWAN mode, it checks whether the node has already joined the network. Then, in this example, it is reading the analog values from the RAK5811 and putting the data together with the battery value in the payload.    
 After the payload is ready, it calls **`send_packet`** to get the packet sent out.
 
 ```cpp

@@ -1,14 +1,31 @@
 /**
- * @file RUI3-Modular.ino
+ * @file main.cpp
  * @author Bernd Giesecke (bernd@giesecke.tk)
- * @brief RUI3 based code for low power practice
+ * @brief Modbus Master reading data from environment sensors
  * @version 0.1
- * @date 2023-03-29
+ * @date 2024-01-17
  *
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2024
  *
  */
 #include "app.h"
+
+// data array for modbus network sharing
+union au16data_u au16data = {0, 0, 0, 0};
+
+/**
+ *  Modbus object declaration
+ *  u8id : node id = 0 for master, = 1..247 for slave
+ *  port : serial port
+ *  u8txenpin : 0 for RS-232 and USB-FTDI
+ *               or any pin number > 1 for RS-485
+ */
+Modbus master(0, Serial1, 0); // this is master and RS-232 or USB-FTDI
+
+/**
+ * This is an structe which contains a query to an slave device
+ */
+modbus_t telegram;
 
 /** Packet is confirmed/unconfirmed (Set with AT commands) */
 bool g_confirmed_mode = false;
@@ -25,12 +42,6 @@ uint8_t set_fPort = 2;
 
 /** Payload buffer */
 WisCayenne g_solution_data(255);
-
-/** Flag if RAK1901 was found */
-bool has_rak1901 = false;
-
-/** Flag if RAK1902 was found */
-bool has_rak1902 = false;
 
 /**
  * @brief Callback after join request cycle
@@ -66,18 +77,6 @@ void receiveCallback(SERVICE_LORA_RECEIVE_T *data)
 	}
 	Serial.print("\r\n");
 	tx_active = false;
-}
-
-/**
- * @brief Callback for LinkCheck result
- *
- * @param data pointer to structure with the linkcheck result
- */
-void linkcheckCallback(SERVICE_LORA_LINKCHECK_T *data)
-{
-	MYLOG("LC_CB", "%s Margin %d GW# %d RSSI%d SNR %d", data->State == 0 ? "Success" : "Failed",
-		  data->DemodMargin, data->NbGateways,
-		  data->Rssi, data->Snr);
 }
 
 /**
@@ -148,7 +147,6 @@ void setup()
 		api.lorawan.registerRecvCallback(receiveCallback);
 		api.lorawan.registerSendCallback(sendCallback);
 		api.lorawan.registerJoinCallback(joinCallback);
-		api.lorawan.registerLinkCheckCallback(linkcheckCallback);
 	}
 	else // Setup for LoRa P2P
 	{
@@ -162,27 +160,16 @@ void setup()
 	pinMode(LED_BLUE, OUTPUT);
 	digitalWrite(LED_BLUE, HIGH);
 
-	pinMode(WB_IO1, OUTPUT);
-	digitalWrite(WB_IO1, LOW);
-	pinMode(WB_IO2, OUTPUT);
-	digitalWrite(WB_IO2, LOW);
-
-	// Start Serial
 	Serial.begin(115200);
 
 	// Delay for 5 seconds to give the chance for AT+BOOT
 	delay(5000);
-
-	api.system.firmwareVersion.set("RUI3-T_H_P-V1.0.0");
-
+	api.system.firmwareVersion.set("RUI3-ModBus-Master-V1.0.0");
 	Serial.println("RAKwireless RUI3 Node");
 	Serial.println("------------------------------------------------------");
 	Serial.println("Setup the device with WisToolBox or AT commands before using it");
-	Serial.printf("Version %s\n", api.system.firmwareVersion.get().c_str());
+	Serial.printf("Ver %s\n", api.system.firmwareVersion.get().c_str());
 	Serial.println("------------------------------------------------------");
-
-	// Initialize module
-	Wire.begin();
 
 	// Register the custom AT command to get device status
 	if (!init_status_at())
@@ -201,13 +188,17 @@ void setup()
 
 	digitalWrite(LED_GREEN, LOW);
 
+	// Initialize the Modbus interface on Serial1 (connected to RAK5802 RS485 module)
+	pinMode(WB_IO2, OUTPUT);
+	digitalWrite(WB_IO2, HIGH);
+	Serial1.begin(19200); // baud-rate at 19200
+	master.start();
+	master.setTimeOut(2000); // if there is no answer in 2000 ms, roll over
+	
 	// Create a timer.
 	api.system.timer.create(RAK_TIMER_0, sensor_handler, RAK_TIMER_PERIODIC);
-	if (custom_parameters.send_interval != 0)
-	{
-		// Start a timer.
-		api.system.timer.start(RAK_TIMER_0, custom_parameters.send_interval, NULL);
-	}
+	// Start a timer.
+	api.system.timer.start(RAK_TIMER_0, custom_parameters.send_interval, NULL);
 
 	// Check if it is LoRa P2P
 	if (api.lorawan.nwm.get() == 0)
@@ -244,68 +235,88 @@ void setup()
 	api.ble.advertise.start(30);
 #endif
 
-	// Check if sensors are connected and initialize them
-	has_rak1901 = init_rak1901();
-	if (has_rak1901)
-	{
-		Serial.println("+EVT:RAK1901");
-	}
-	has_rak1902 = init_rak1902();
-	if (has_rak1902)
-	{
-		Serial.println("+EVT:RAK1902");
-	}
-
-	digitalWrite(LED_BLUE, LOW);
+	digitalWrite(WB_IO2, LOW);
 }
 
-/**
- * @brief sensor_handler is a timer function called every
- * custom_parameters.send_interval milliseconds. Default is 120000. Can be
- * changed with ATC+SENDINT command
- *
- */
 void sensor_handler(void *)
 {
-	MYLOG("UPLINK", "Start");
-	digitalWrite(LED_BLUE, HIGH);
+	digitalWrite(WB_IO2, HIGH);
+	MYLOG("SENS", "Send request over ModBus");
 
-	if (api.lorawan.nwm.get() == 1)
+	au16data.data[0] = au16data.data[1] = au16data.data[2] = au16data.data[3] = 0;
+
+	telegram.u8id = 1;				  // slave address
+	telegram.u8fct = 3;				  // function code (this one is registers read)
+	telegram.u16RegAdd = 0;			  // start address in slave
+	telegram.u16CoilsNo = 4;		  // number of elements (coils or registers) to read
+	telegram.au16reg = au16data.data; // pointer to a memory array in the Arduino
+
+	master.query(telegram); // send query (only once)
+
+	time_t start_poll = millis();
+
+	bool data_ready = false;
+	while ((millis() - start_poll) < 5000)
 	{
-		// Check if the node has joined the network
-		if (!api.lorawan.njs.get())
+		master.poll(); // check incoming messages
+		if (master.getState() == COM_IDLE)
 		{
-			MYLOG("UPLINK", "Not joined, skip sending");
-			return;
+			if ((au16data.data[0] == 0) && (au16data.data[1] == 0) && (au16data.data[2] == 0) && (au16data.data[3] == 0))
+			{
+				MYLOG("SENS", "No data received");
+				break;
+			}
+			else
+			{
+				MYLOG("SENS", "Temperature = %.2f", au16data.sensor_data.temperature / 100.0);
+				MYLOG("SENS", "Humidity = %.2f", au16data.sensor_data.humidity / 100.0);
+				MYLOG("SENS", "Barometer = %.1f", au16data.sensor_data.pressure / 10.0);
+				MYLOG("SENS", "Battery = %.2f", au16data.sensor_data.battery / 100.0);
+
+				data_ready = true;
+
+				// Clear payload
+				g_solution_data.reset();
+
+				if (au16data.sensor_data.temperature != 0)
+				{
+					g_solution_data.addTemperature(LPP_CHANNEL_TEMP, au16data.sensor_data.temperature / 100.0);
+				}
+				if (au16data.sensor_data.humidity != 0)
+				{
+					g_solution_data.addRelativeHumidity(LPP_CHANNEL_HUMID, au16data.sensor_data.humidity / 100.0);
+				}
+				if (au16data.sensor_data.pressure != 0)
+				{
+					g_solution_data.addBarometricPressure(LPP_CHANNEL_PRESS, au16data.sensor_data.pressure / 10.0);
+				}
+				if (au16data.sensor_data.battery != 0)
+				{
+					g_solution_data.addVoltage(LPP_CHANNEL_TEMP, au16data.sensor_data.battery / 100.0);
+				}
+
+				float battery_reading = 0.0;
+				// Add battery voltage
+				for (int i = 0; i < 10; i++)
+				{
+					battery_reading += api.system.bat.get(); // get battery voltage
+				}
+
+				battery_reading = battery_reading / 10;
+
+				g_solution_data.addVoltage(LPP_CHANNEL_BATT, battery_reading);
+
+				break;
+			}
 		}
 	}
 
-	// Clear payload
-	g_solution_data.reset();
-
-	// Get sensor values
-	if (has_rak1901)
+	if (data_ready)
 	{
-		read_rak1901();
+		// Send the packet
+		send_packet();
 	}
-	if (has_rak1902)
-	{
-		read_rak1902();
-	}
-
-	float battery_reading = 0.0;
-	// Add battery voltage
-	for (int i = 0; i < 10; i++)
-	{
-		battery_reading += api.system.bat.get(); // get battery voltage
-	}
-
-	battery_reading = battery_reading / 10;
-
-	g_solution_data.addVoltage(1, battery_reading);
-
-	// Send the packet
-	send_packet();
+	digitalWrite(WB_IO2, LOW);
 }
 
 /**
@@ -313,7 +324,7 @@ void sensor_handler(void *)
  * The loop() does nothing than sleep.
  *
  */
-void loop()
+void loop(void)
 {
 	api.system.sleep.all();
 }

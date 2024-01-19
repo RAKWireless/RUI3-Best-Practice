@@ -179,11 +179,11 @@ void loop()
 }
 ```
 
-## send_handler & send_packet
+## sensor_handler & send_packet
 
 This functions are where the action is happening. 
 
-**`send_handler`** is called by the timer or by an interrupt triggered by the accelerometer. First, if in LoRaWAN mode, it checks whether the node has already joined the network. 
+**`sensor_handler`** is called by the timer or by an interrupt triggered by the accelerometer. First, if in LoRaWAN mode, it checks whether the node has already joined the network. 
 
 ```cpp
 void sensor_handler(void *)

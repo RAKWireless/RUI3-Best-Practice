@@ -1,30 +1,25 @@
 | <img src="../assets/rakstar.jpg" alt="RAKWireless"> | <img src="../assets/RUI3.jpg" alt="RUI3" width=30%> | <img src="../assets/rakstar.jpg" alt="RAKstar" > |    
 | :-: | :-: | :-: |     
 
-# Example how to create a temperature, humidity and barometric pressure sensor with RUI3
+# Example for a simple Modbus Master with RAK5802 and RUI3
 
-One problem often seen when writing custom code with RUI3 is that the **`loop()`** is used together with **`api.system.sleep.all(xxxxx)`**. This is IMHO not the best solution to achieve lowest power consumption and brings some timing problems, as when a LoRa or LoRaWAN packet is sent, the TX finished event will wake up the system and it will not go back to sleep.
+This example is a simple Modbus Master that reads sensor values from a Modbus Slave. For easy testing a Modbus Slave application is available for another WisBlock/WisDuo based module with a temperature, humidity and barometric pressure sensor.    
 
 This example code is _**NOT**_ using the loop at all. Instead it is complete event driven. The WisDuo/WisBlock module is sleeping unless an event occurs. An event can be a timer callback or an external interrupt, or if using LoRaWAN Class C, it can be a packet received from the LoRaWAN server.
 
-This code does setup a timer that wakes up the device in the desired send interval, then it reads the sensor values from RAK1901 and RAK1902 WisBlock modules. Then it sends a packet. After that the system goes back to sleep automatically.    
+(1) A simple Modbus master that uses a timer to wake up the device in the desired send interval, retrieves sensor values from the Modbus slave and send them over LoRaWAN. Then the system goes back to sleep automatically. The code for the master is in the [RUI3-RAK5802-Modbus-Master](./RUI3-RAK5802-Modbus-Master) folder.    
+   
+(2) A simple Modbus slave that reads temperature, humidity and barometric pressure from a RAK1901 and RAK1902 module. It offers then the acquired values in 4 registers. This example does not include any coils to set or read binary values. The code for the slave is in the [RUI3-RAK5802-Modbus-Slave](./RUI3-RAK5802-Modbus-Slave) folder. This example is not optimized for low power consumption as the Modbus Slave has to listen all the time for incoming messages over the RS485 port.   
 
-### ⚠️ INFORMATION
-The payload is in Cayenne LPP format with extended data types. A matching decoder can be found in the [RAKwireless_Standardized_Payload Github repo](https://github.com/RAKWireless/RAKwireless_Standardized_Payload/blob/main/RAKwireless_Standardized_Payload.js)
-
-### ⚠️ INFORMATION
-The code requires RUI3 libraries for the RAK1901 and RAK1902 modules. The libraries can be downloaded as ZIP files from
-- [RAKwireless_RAK1901_Temperature_and_Humidity_SHTC3.zip](https://downloads.rakwireless.com/RUI/RUI3/Library/RAKwireless_RAK1901_Temperature_and_Humidity_SHTC3.zip)
-- [RAKwireless_RAK1902_Pressure_LPS22HB.zip](https://downloads.rakwireless.com/RUI/RUI3/Library/RAKwireless_RAK1902_Pressure_LPS22HB.zip)
-The libraries can be installed with the "Install from ZIP" function in the ArduinoIDE Library Manager.    
-The libraries can be installed as well manually by unzipping the content into the default Arduino Library folder.
+### ⚠️ INFORMATION    
+This example uses a modified version of the [Modbus-Master-Slave-for-Arduino](https://github.com/smarmengol/Modbus-Master-Slave-for-Arduino) library. This library was choosen because of its small code size. However, due to some incompatible definitions, it did not compile with RUI3. The library was slightly modified to work with RUI3 and is included as project files _**`RUI3_ModbusRtu.cpp`**_ and _**`RUI3_ModbusRtu.h`**_
 
 ----
 
-# Code sections
+# Code sections (only Modbus Master Code)
 
 ### ⚠️ INFORMATION    
-The code snippets below are simplified. Check the provided source code for the full code.    
+The code snippets below are simplified. Check the provided source code for the full code.     
 
 ## LoRa/LoRaWAN callbacks
 
@@ -109,7 +104,18 @@ First it checks whether the system is working in LoRaWAN mode or as a LoRa P2P m
 	}
 ```
 
-Second a periodic timer is initialized to wake up the system in intervals to send a packet to the LoRaWAN server or other LoRa P2P nodes. The interval time is set with the variable **`custom_parameters.send_interval`**.
+Next, the Modbus Master interface is initialized. The RS485 module RAK5802 is connected through Serial1 to the RUI3 module. The power of the RAK5802 is controlled with the WB_IO2 GPIO. If WB_IO2 is low, the RAK5802 is powered off, if WB_IO2 is high, the RAK5802 is powered up.
+
+```cpp
+	// Initialize the Modbus interface on Serial1 (connected to RAK5802 RS485 module)
+	pinMode(WB_IO2, OUTPUT);
+	digitalWrite(WB_IO2, HIGH);
+	Serial1.begin(19200); // baud-rate at 19200
+	master.start();
+	master.setTimeOut(2000); // if there is no answer in 2000 ms, roll over
+```
+
+Then a periodic timer is initialized to wake up the system in intervals to send a packet to the LoRaWAN server or other LoRa P2P nodes. The interval time is set with the variable **`custom_parameters.send_interval`**.
 
 ```cpp
 	// Create a timer.
@@ -121,20 +127,6 @@ Second a periodic timer is initialized to wake up the system in intervals to sen
 	}
 ```
 
-The setup() is as well checking whether the RAK1901 and/or the RAK1902 is present by initializing them and setting a flag.
-```cpp
-	// Check if sensors are connected and initialize them
-	has_rak1901 = init_rak1901();
-	if (has_rak1901)
-	{
-		Serial.println("+EVT:RAK1901");
-	}
-	has_rak1902 = init_rak1902();
-	if (has_rak1902)
-	{
-		Serial.println("+EVT:RAK1902");
-	}
-```
 The **`loop()`** function does nothing beside of killing itself, which prevents that it is called frequently from the underlaying RUI3 scheduler.
 
 ```cpp
@@ -148,49 +140,92 @@ void loop()
 
 This functions are where the action is happening. 
 
-**`sensor_handler`** is called by the timer. First, if in LoRaWAN mode, it checks whether the node has already joined the network. Then, in this example, it is reading the analog values from the RAK5811 and putting the data together with the battery value in the payload.    
-After the payload is ready, it calls **`send_packet`** to get the packet sent out.
+**`sensor_handler`** is called by the timer. First it will send a query to the Modbus Slave device on address 1 to get the latest sensor values. The sensor values are provided in 4 Modbus registers. As Modbus standard does not define float values, the sensor data is received as integer with a multiplier applied.
+- Temperature is multiplied by 100
+- Humidity is multiplied by 100
+- Barometer is multiplied by 10
+- Battery is multiplied by 100
+
+If data could be retrieved from the Modbus Slave, the data is added to the LoRaWAN payload.
 
 ```cpp
 void sensor_handler(void *)
 {
-	MYLOG("UPLINK", "Start");
-	digitalWrite(LED_BLUE, HIGH);
+	digitalWrite(WB_IO2, HIGH);
+	MYLOG("SENS", "Send request over ModBus");
 
-	if (api.lorawan.nwm.get() == 1)
+	au16data.data[0] = au16data.data[1] = au16data.data[2] = au16data.data[3] = 0;
+
+	telegram.u8id = 1;				  // slave address
+	telegram.u8fct = 3;				  // function code (this one is registers read)
+	telegram.u16RegAdd = 0;			  // start address in slave
+	telegram.u16CoilsNo = 4;		  // number of elements (coils or registers) to read
+	telegram.au16reg = au16data.data; // pointer to a memory array in the Arduino
+
+	master.query(telegram); // send query (only once)
+
+	time_t start_poll = millis();
+
+	bool data_ready = false;
+	while ((millis() - start_poll) < 5000)
 	{
-		// Check if the node has joined the network
-		if (!api.lorawan.njs.get())
+		master.poll(); // check incoming messages
+		if (master.getState() == COM_IDLE)
 		{
-			MYLOG("UPLINK", "Not joined, skip sending");
-			return;
+			if ((au16data.data[0] == 0) && (au16data.data[1] == 0) && (au16data.data[2] == 0) && (au16data.data[3] == 0))
+			{
+				MYLOG("SENS", "No data received");
+				break;
+			}
+			else
+			{
+				MYLOG("SENS", "Temperature = %.2f", au16data.sensor_data.temperature / 100.0);
+				MYLOG("SENS", "Humidity = %.2f", au16data.sensor_data.humidity / 100.0);
+				MYLOG("SENS", "Barometer = %.1f", au16data.sensor_data.pressure / 10.0);
+				MYLOG("SENS", "Battery = %.2f", au16data.sensor_data.battery / 100.0);
+
+				data_ready = true;
+
+				// Clear payload
+				g_solution_data.reset();
+
+				if (au16data.sensor_data.temperature != 0)
+				{
+					g_solution_data.addTemperature(LPP_CHANNEL_TEMP, au16data.sensor_data.temperature / 100.0);
+				}
+				if (au16data.sensor_data.humidity != 0)
+				{
+					g_solution_data.addRelativeHumidity(LPP_CHANNEL_HUMID, au16data.sensor_data.humidity / 100.0);
+				}
+				if (au16data.sensor_data.pressure != 0)
+				{
+					g_solution_data.addBarometricPressure(LPP_CHANNEL_PRESS, au16data.sensor_data.pressure / 10.0);
+				}
+				if (au16data.sensor_data.battery != 0)
+				{
+					g_solution_data.addVoltage(LPP_CHANNEL_TEMP, au16data.sensor_data.battery / 100.0);
+				}
+
+				float battery_reading = 0.0;
+				// Add battery voltage
+				for (int i = 0; i < 10; i++)
+				{
+					battery_reading += api.system.bat.get(); // get battery voltage
+				}
+
+				battery_reading = battery_reading / 10;
+
+				g_solution_data.addVoltage(LPP_CHANNEL_BATT, battery_reading);
+
+				break;
+			}
 		}
 	}
+```
 
-	// Clear payload
-	g_solution_data.reset();
+If data could be retrieved from the Modbus Slave, the data is sent over Lora P2P or LoRaWAN.    
 
-	// Get sensor values
-	if (has_rak1901)
-	{
-		read_rak1901();
-	}
-	if (has_rak1902)
-	{
-		read_rak1902();
-	}
-
-	float battery_reading = 0.0;
-	// Add battery voltage
-	for (int i = 0; i < 10; i++)
-	{
-		battery_reading += api.system.bat.get(); // get battery voltage
-	}
-
-	battery_reading = battery_reading / 10;
-
-	g_solution_data.addVoltage(1, battery_reading);
-
+```cpp
 	// Send the packet
 	send_packet();
 }
@@ -202,30 +237,23 @@ void sensor_handler(void *)
 void send_packet(void)
 {
 	// Check if it is LoRaWAN
-	if (api.lorawan.nwm.get() == 1)
+	if (api.lora.nwm.get() == 1)
 	{
-		MYLOG("UPLINK", "Sending packet # %d", my_fcount);
-		my_fcount++;
 		// Send the packet
-		if (api.lorawan.send(g_solution_data.getSize(), g_solution_data.getBuffer(), set_fPort, g_confirmed_mode, g_confirmed_retry))
+		if (api.lorawan.send(4, g_solution_data, set_fPort, g_confirmed_mode, g_confirmed_retry))
 		{
-			MYLOG("UPLINK", "Packet enqueued, size %d", g_solution_data.getSize());
-			tx_active = true;
+			MYLOG("UPLINK", "Packet enqueued, size 4");
 		}
 		else
 		{
 			MYLOG("UPLINK", "Send failed");
-			tx_active = false;
 		}
 	}
 	// It is P2P
 	else
 	{
-		MYLOG("UPLINK", "Send packet with size %d over P2P", g_solution_data.getSize());
-
-		digitalWrite(LED_BLUE, LOW);
-
-		if (api.lora.psend(g_solution_data.getSize(), g_solution_data.getBuffer(), true))
+		MYLOG("UPLINK", "Send packet with size 4 over P2P");
+		if (api.lora.psend(4, g_solution_data))
 		{
 			MYLOG("UPLINK", "Packet enqueued");
 		}

@@ -10,7 +10,6 @@ The code compiles on both RAK4631 and RAK3172 and I test it on both modules.
 - [Software used](#software_used)
 - [Packet data format](#packet_data_format)
 
-
 ----
 
 # Hardware supported
