@@ -56,7 +56,7 @@ The simpliest example is just showing how to design an application that is event
 It includes as well a simple example how to implement custom AT commands.
 
 ## [RUI3-RAK1901-RAK1902-Example](./RUI3-RAK1901-RAK1902-Example)    
-A simple sensor application based on RAK1901 and RAk1902. It reads temperature, humidity and barometric pressure from these sensors and sends them in a configurable interval.    
+A simple sensor application based on RAK1901 and RAK1902. It reads temperature, humidity and barometric pressure from these sensors and sends them in a configurable interval.    
 This example is using the Cayenne LPP data format to send the formatted payload.    
 
 ## [RUI3-RAK12500-RAK1904-GNSS](./RUI3-RAK12500-RAK1904-GNSS)    
@@ -78,6 +78,9 @@ It is a very simple (~30 US$ cheap) device that can help to check LoRa and LoRaW
 
 ## [RUI3 Modbus Master example](./ModBus)     
 This example is a simple Modbus Master that reads sensor values from a Modbus Slave. For easy testing a Modbus Slave application is available for another WisBlock/WisDuo based module with a temperature, humidity and barometric pressure sensor.    
+_**⚠️ INFORMATION**_  
+This example uses a modified version of the [Modbus-Master-Slave-for-Arduino](https://github.com/smarmengol/Modbus-Master-Slave-for-Arduino) library. This library was choosen because of its small code size. However, due to some incompatible definitions, it did not compile with RUI3. The library was slightly modified to work with RUI3 and is included as project files _**`RUI3_ModbusRtu.cpp`**_ and _**`RUI3_ModbusRtu.h`**_.    
+The original libray is licensed under the [GNU LESSER GENERAL PUBLIC LICENSE Version 2.1](https://github.com/smarmengol/Modbus-Master-Slave-for-Arduino/blob/master/LICENSE.md)
 
 ----
 

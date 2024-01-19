@@ -317,7 +317,7 @@ As the payload size might vary, depending on whether a location fix was achieved
 
 ## RAK12500 initialization and location acquistion
 
-**`init_gnss`** is called before every location acquisition, as the RAk12500 is powered down when not in use.    
+**`init_gnss`** is called before every location acquisition, as the RAK12500 is powered down when not in use.    
 ```cpp
 bool init_gnss(void)
 {

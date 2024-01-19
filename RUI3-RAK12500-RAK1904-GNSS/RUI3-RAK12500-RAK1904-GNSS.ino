@@ -34,7 +34,7 @@ uint16_t check_gnss_max_try = 0;
 /** Flag for GNSS readings active */
 bool gnss_active = false;
 
-/** Flag if RAk1904 is present */
+/** Flag if RAK1904 is present */
 bool has_rak1904 = false;
 
 /**

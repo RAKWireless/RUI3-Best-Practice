@@ -1,7 +1,7 @@
 /**
  * @file RAK12500_gnss.cpp
  * @author Bernd Giesecke (bernd@giesecke.tk)
- * @brief Initialization and usage of RAk12500
+ * @brief Initialization and usage of RAK12500
  * @version 0.1
  * @date 2024-01-14
  *
