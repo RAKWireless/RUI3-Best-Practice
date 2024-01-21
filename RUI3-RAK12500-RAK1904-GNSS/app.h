@@ -38,6 +38,7 @@ struct custom_param_s
 {
 	uint8_t valid_flag = 0xAA;
 	uint32_t send_interval = 0;
+	uint32_t min_interval = 0;
 };
 extern custom_param_s custom_parameters;
 
@@ -50,6 +51,7 @@ void sensor_handler(void *);
 void send_packet(void);
 bool init_status_at(void);
 bool init_interval_at(void);
+bool init_min_interval_at(void);
 bool get_at_setting(void);
 bool save_at_setting(void);
 extern WisCayenne g_solution_data;

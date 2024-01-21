@@ -12,6 +12,10 @@ This code does setup a timer that wakes up the device in the desired send interv
 ### ⚠️ INFORMATION
 The payload is in Cayenne LPP format with extended data types. A matching decoder can be found in the [RAKwireless_Standardized_Payload Github repo](https://github.com/RAKWireless/RAKwireless_Standardized_Payload/blob/main/RAKwireless_Standardized_Payload.js)
 
+This examples includes three custom AT commands:     
+- **`ATC+SENDINT`** to set the send interval time or heart beat time. If the device is not in motion it will send a payload with this interval. The time is set in seconds, e.g. **`AT+SENDINT=600`** sets the send interval to 600 seconds or 10 minutes.    
+- **`ATC+STATUS`** to get some status information from the device.    
+
 ----
 
 # Code sections

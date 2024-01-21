@@ -10,6 +10,10 @@ This example code is _**NOT**_ using the loop at all. Instead it is complete eve
 This code does setup a timer that wakes up the device in the desired send interval, send a packet and then the system goes back to sleep automatically.    
 It can be extended to use external interrupts, see my other examples codes.
 
+This examples includes two custom AT commands:     
+- **`ATC+SENDINT`** to set the send interval time or heart beat time. If the device is not in motion it will send a payload with this interval. The time is set in seconds, e.g. **`AT+SENDINT=600`** sets the send interval to 600 seconds or 10 minutes.    
+- **`ATC+STATUS`** to get some status information from the device.    
+
 ----
 
 # Code sections

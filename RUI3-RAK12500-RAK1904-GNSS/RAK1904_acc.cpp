@@ -175,7 +175,7 @@ bool init_rak1904(void)
  */
 void int_callback_rak1904(void)
 {
-	if ((millis() - last_trigger) > (custom_parameters.send_interval / 2) && !gnss_active)
+	if ((millis() - last_trigger) > (custom_parameters.min_interval) && !gnss_active)
 	{
 		MYLOG("ACC", "GNSS %s, time since last trigger %0.3f s", gnss_active ? "active" : "not active", (float)((millis() - last_trigger) / 1000.0));
 		motion_detected = true;

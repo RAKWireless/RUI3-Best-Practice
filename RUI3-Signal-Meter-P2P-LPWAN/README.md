@@ -56,6 +56,11 @@ If used with LinkCheck, the LoRaWAN server will report the number of gateways an
 Extract from the _**LoRaWAN 1.0.3 Specification**_:
 <center><img src="./assets/lorawan-linkcheck.png" alt="LinkCheck"></center>
 
+This examples includes three custom AT commands:     
+- **`ATC+SENDINT`** to set the send interval time or heart beat time. If the device is not in motion it will send a payload with this interval. The time is set in seconds, e.g. **`AT+SENDINT=600`** sets the send interval to 600 seconds or 10 minutes.    
+- **`ATC+MODE`** to set the test mode. 0 using LPWAN LinkCheck, 1 using LPWAN CFM, 2 using LoRa P2P
+- **`ATC+STATUS`** to get some status information from the device.    
+
 [Back to top](#content)
 
 ----

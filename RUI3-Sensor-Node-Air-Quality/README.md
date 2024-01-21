@@ -3,7 +3,11 @@ RUI3 example code for WisBlock I2C sensor modules, focused on Air Quality Sensor
 
 This code is _**Work in progress**_ and far from finished. But it can give a first start how to use RUI3.     
 
-The code compiles on both RAK4631 and RAK3172 and I test it on both modules.    
+The code compiles on all RUI3 modules.    
+
+This examples includes three custom AT commands:     
+- **`ATC+SENDINT`** to set the send interval time or heart beat time. If the device is not in motion it will send a payload with this interval. The time is set in seconds, e.g. **`AT+SENDINT=600`** sets the send interval to 600 seconds or 10 minutes.    
+- **`ATC+STATUS`** to get some status information from the device.    
 
 # Content
 - [Hardware supported](#hardware_supported)

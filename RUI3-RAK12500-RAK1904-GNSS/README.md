@@ -11,6 +11,12 @@ Independent of the acquisition result, a payload is sent to the LoRaWAN server o
 ### ⚠️ INFORMATION
 The payload is in Cayenne LPP format with extended data types. A matching decoder can be found in the [RAKwireless_Standardized_Payload Github repo](https://github.com/RAKWireless/RAKwireless_Standardized_Payload/blob/main/RAKwireless_Standardized_Payload.js)
 
+
+This examples includes three custom AT commands:     
+- **`ATC+SENDINT`** to set the send interval time or heart beat time. If the device is not in motion it will send a payload with this interval. The time is set in seconds, e.g. **`AT+SENDINT=600`** sets the send interval to 600 seconds or 10 minutes.    
+- **`ATC+MININT`** to set the minimal time between two location reports if the device is moving.
+- **`ATC+STATUS`** to get some status information from the device.    
+
 ----
 
 # Code sections
@@ -230,8 +236,8 @@ Then it initializes the GNSS module and starts the counter that is checking the 
 		// Startup GNSS module
 		init_gnss();
 		check_gnss_counter = 0;
-		// Max location aquisition time is half of send interval
-		check_gnss_max_try = custom_parameters.send_interval / 2 / 2500;
+		// Max location aquisition time is half of minimal interval
+		check_gnss_max_try = custom_parameters.min_interval / 2 / 2500;
 		gnss_start = millis();
 		// Start the timer
 		api.system.timer.start(RAK_TIMER_1, 2500, NULL);
@@ -531,14 +537,14 @@ bool init_rak1904(void)
 }
 ```
 
-_**`int_callback_rak1904`**_ is the callback triggered by the interrupt of the acceleration sensor. It first checks if a minimum time has expired since the last motion trigger. This is to avoid to send too many data packets. In this example the delay between two packets is set to 1/2 of the heart beat time, but it can be changed here easily.    
+_**`int_callback_rak1904`**_ is the callback triggered by the interrupt of the acceleration sensor. It first checks if a minimum time has expired since the last motion trigger. This is to avoid to send too many data packets. The delay between two packets can be set with a custom AT command.    
 If the time since the last trigger is sufficient long, it sets a flag and calls the _**`sensor_handler`**_ to signal the start of a location acquisition.    
 It resets as well the heart beat timer.    
 
 ```cpp
 void int_callback_rak1904(void)
 {
-	if ((millis() - last_trigger) > (custom_parameters.send_interval / 2) && !gnss_active)
+	if ((millis() - last_trigger) > (custom_parameters.min_interval) && !gnss_active)
 	{
 		motion_detected = true;
 		// Stop a timer.

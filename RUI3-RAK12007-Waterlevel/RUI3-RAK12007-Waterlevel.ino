@@ -1,9 +1,9 @@
 /**
- * @file RUI3-Modular.ino
+ * @file RUI3-RAK12007-Waterlevel.ino
  * @author Bernd Giesecke (bernd@giesecke.tk)
- * @brief RUI3 based code for low power practice
+ * @brief Water level measurement with RAK12007 ultrasonic sensor
  * @version 0.1
- * @date 2023-03-29
+ * @date 2023-12-30
  *
  * @copyright Copyright (c) 2023
  *
@@ -23,19 +23,8 @@ volatile bool tx_active = false;
 /** fPort to send packages */
 uint8_t set_fPort = 2;
 
-/** LoRaWAN packet */
+/** Payload buffer */
 WisCayenne g_solution_data(128);
-
-/** Counter for GNSS readings */
-uint16_t check_gnss_counter = 0;
-/** Max number of GNSS readings before giving up */
-uint16_t check_gnss_max_try = 0;
-
-/** Flag for GNSS readings active */
-bool gnss_active = false;
-
-/** Flag if RAK1904 is present */
-bool has_rak1904 = false;
 
 /**
  * @brief Callback after join request cycle
@@ -47,13 +36,13 @@ void joinCallback(int32_t status)
 	// MYLOG("JOIN-CB", "Join result %d", status);
 	if (status != 0)
 	{
-		// MYLOG("JOIN-CB", "LoRaWan OTAA - join fail! \r\n");
+		MYLOG("JOIN-CB", "LoRaWan OTAA - join fail! \r\n");
 		// To be checked if this makes sense
 		// api.lorawan.join();
 	}
 	else
 	{
-		// MYLOG("JOIN-CB", "LoRaWan OTAA - joined! \r\n");
+		MYLOG("JOIN-CB", "LoRaWan OTAA - joined! \r\n");
 		digitalWrite(LED_BLUE, LOW);
 	}
 }
@@ -66,11 +55,11 @@ void joinCallback(int32_t status)
 void receiveCallback(SERVICE_LORA_RECEIVE_T *data)
 {
 	MYLOG("RX-CB", "RX, port %d, DR %d, RSSI %d, SNR %d", data->Port, data->RxDatarate, data->Rssi, data->Snr);
-	// for (int i = 0; i < data->BufferSize; i++)
-	// {
-	// 	Serial.printf("%02X", data->Buffer[i]);
-	// }
-	// Serial.print("\r\n");
+	for (int i = 0; i < data->BufferSize; i++)
+	{
+		Serial.printf("%02X", data->Buffer[i]);
+	}
+	Serial.print("\r\n");
 	tx_active = false;
 }
 
@@ -96,11 +85,6 @@ void sendCallback(int32_t status)
 	MYLOG("TX-CB", "TX status %d", status);
 	digitalWrite(LED_BLUE, LOW);
 	tx_active = false;
-	// If it was motion triggered, reset the ACC interrupts
-	if (has_rak1904)
-	{
-		clear_int_rak1904();
-	}
 }
 
 /**
@@ -110,7 +94,7 @@ void sendCallback(int32_t status)
  */
 void recv_cb(rui_lora_p2p_recv_t data)
 {
-	MYLOG("PRX-CB", "P2P RX, RSSI %d, SNR %d", data.Rssi, data.Snr);
+	MYLOG("RX-P2P-CB", "P2P RX, RSSI %d, SNR %d", data.Rssi, data.Snr);
 	for (int i = 0; i < data.BufferSize; i++)
 	{
 		Serial.printf("%02X", data.Buffer[i]);
@@ -125,14 +109,9 @@ void recv_cb(rui_lora_p2p_recv_t data)
  */
 void send_cb(void)
 {
-	MYLOG("PTX-CB", "P2P TX finished");
+	MYLOG("TX-P2P-CB", "P2P TX finished");
 	digitalWrite(LED_BLUE, LOW);
 	tx_active = false;
-	// If it was motion triggered, reset the ACC interrupts
-	if (has_rak1904)
-	{
-		clear_int_rak1904();
-	}
 }
 
 /**
@@ -142,7 +121,7 @@ void send_cb(void)
  */
 void cad_cb(bool result)
 {
-	MYLOG("CAD-CB", "P2P CAD reports %s", result ? "activity" : "no activity");
+	MYLOG("CAD-P2P-CB", "P2P CAD reports %s", result ? "activity" : "no activity");
 }
 
 /**
@@ -187,9 +166,9 @@ void setup()
 	// Delay for 5 seconds to give the chance for AT+BOOT
 	delay(5000);
 
-	api.system.firmwareVersion.set("RUI3-Location-Tracker-V1.0.0");
+	api.system.firmwareVersion.set("RUI3-Water-Level-V1.0.0");
 
-	Serial.println("RAKwireless RUI3 Location Tracker");
+	Serial.println("RAKwireless RUI3 Water level sensor");
 	Serial.println("------------------------------------------------------");
 	Serial.println("Setup the device with WisToolBox or AT commands before using it");
 	Serial.printf("Version %s\n", api.system.firmwareVersion.get().c_str());
@@ -197,6 +176,9 @@ void setup()
 
 	// Initialize module
 	Wire.begin();
+
+	// Initialize RAK12007
+	has_rak12007 = init_rak12007();
 
 	// Register the custom AT command to get device status
 	if (!init_status_at())
@@ -210,10 +192,10 @@ void setup()
 		MYLOG("SETUP", "Add custom AT command Send Interval fail");
 	}
 
-	// Register the custom AT command to set the minimal interval
-	if (!init_min_interval_at())
+	// Register the custom AT command to set the tank depth
+	if (!init_tank_depth_at())
 	{
-		MYLOG("SETUP", "Add custom AT command Minimal Interval fail");
+		MYLOG("SETUP", "Add custom AT command Tank Depth fail");
 	}
 
 	// Get saved sending interval from flash
@@ -223,19 +205,11 @@ void setup()
 
 	// Create a timer.
 	api.system.timer.create(RAK_TIMER_0, sensor_handler, RAK_TIMER_PERIODIC);
-	if (custom_parameters.send_interval != 0)
+	if (g_custom_parameters.send_interval != 0)
 	{
 		// Start a timer.
-		api.system.timer.start(RAK_TIMER_0, custom_parameters.send_interval, NULL);
+		api.system.timer.start(RAK_TIMER_0, g_custom_parameters.send_interval, NULL);
 	}
-
-	MYLOG("SETUP", "Create timer for GNSS polling");
-	// Create a timer.
-	api.system.timer.create(RAK_TIMER_1, gnss_handler, RAK_TIMER_PERIODIC);
-
-	MYLOG("SETUP", "Create timer for interrupt handler");
-	// Create a timer
-	api.system.timer.create(RAK_TIMER_2, sensor_handler, RAK_TIMER_ONESHOT);
 
 	// Check if it is LoRa P2P
 	if (api.lorawan.nwm.get() == 0)
@@ -244,6 +218,11 @@ void setup()
 
 		sensor_handler(NULL);
 	}
+	// else
+	// {
+	// 	// Enable permanent linkcheck
+	// 	api.lorawan.linkcheck.set(2);
+	// }
 
 	if (api.lorawan.nwm.get() == 1)
 	{
@@ -270,72 +249,53 @@ void setup()
 	Serial6.begin(115200, RAK_AT_MODE);
 	api.ble.advertise.start(30);
 #endif
-
-	// Initialize RAK1904
-	has_rak1904 = init_rak1904();
-
-	// Set last trigger time to boot time
-	last_trigger = millis();
 }
 
 /**
  * @brief sensor_handler is a timer function called every
- * custom_parameters.send_interval milliseconds. Can be
- * changed with ATC+SENDINT command
+ * g_custom_parameters.send_interval milliseconds. Default is 120000. Can be
+ * changed in main.h
  *
  */
 void sensor_handler(void *)
 {
+	MYLOG("UPLINK", "Start");
+	digitalWrite(LED_BLUE, HIGH);
+
 	if (api.lorawan.nwm.get() == 1)
-	{
-		// Check if the node has joined the network
+	{ // Check if the node has joined the network
 		if (!api.lorawan.njs.get())
 		{
 			MYLOG("UPLINK", "Not joined, skip sending");
-			// If it was motion triggered, reset the ACC interrupts
-			if (has_rak1904)
-			{
-				clear_int_rak1904();
-			}
-			last_trigger = millis();
 			return;
 		}
 	}
 
-	digitalWrite(LED_BLUE, HIGH);
+	digitalWrite(WB_IO2, HIGH);
 
-	// Just for debug, show if the call is because of a motion detection
-	if (motion_detected)
+	// Reset payload
+	g_solution_data.reset();
+
+	// Create payload
+	float batt_lvl = 0.0;
+	for (int i = 0; i < 10; i++)
 	{
-		MYLOG("UPLINK", "ACC triggered IRQ");
-		motion_detected = false;
+		batt_lvl += api.system.bat.get();
+	}
+	batt_lvl = batt_lvl / 10.0;
+
+	g_solution_data.addVoltage(LPP_CHANNEL_BATT, batt_lvl);
+
+	// Get distance from US sensor
+	if (has_rak12007)
+	{
+		read_rak12007(true);
 	}
 
-	// If GNSS is not yet active, start the timer to aquire the location
-	if (!gnss_active)
-	{
-		// Clear payload
-		g_solution_data.reset();
+	digitalWrite(WB_IO2, LOW);
 
-		// Add battery voltage
-		g_solution_data.addVoltage(LPP_CHANNEL_BATT, api.system.bat.get());
-
-		// Set flag for GNSS active to avoid retrigger */
-		gnss_active = true;
-		// Startup GNSS module
-		init_gnss();
-		check_gnss_counter = 0;
-		// Max location aquisition time is half of minimal interval
-		check_gnss_max_try = custom_parameters.min_interval / 2 / 2500;
-		gnss_start = millis();
-		// Start the timer
-		api.system.timer.start(RAK_TIMER_1, 2500, NULL);
-	}
-	else
-	{
-		MYLOG("UPLINK", "GNSS still active");
-	}
-	digitalWrite(LED_BLUE, LOW);
+	// Send the packet
+	send_packet();
 }
 
 /**
@@ -353,51 +313,31 @@ void loop()
 /**
  * @brief Send the data packet that was prepared in
  * Cayenne LPP format by the different sensor and location
- * acquisition functions
+ * aqcuision functions
  *
  */
 void send_packet(void)
 {
-	// Set flag for GNSS inactive */
-	gnss_active = false;
-
-	// Reset delay timer value
-	last_trigger = millis();
-
-	// Add acquisition time in seconds
-	g_solution_data.addUnixTime(LPP_CHANNEL_GPS, (gnss_finished - gnss_start) / 1000);
-
 	// Check if it is LoRaWAN
 	if (api.lorawan.nwm.get() == 1)
 	{
-		// Check DR
-		uint8_t new_dr = get_min_dr(api.lorawan.band.get(), g_solution_data.getSize());
-		if (new_dr != api.lorawan.dr.get())
-		{
-			api.lorawan.dr.set(new_dr);
-			MYLOG("UPLINK", "Datarate changed to %d", api.lorawan.dr.get());
-		}
+		MYLOG("UPLINK", "Sending LoRaWAN packet with size %d", g_solution_data.getSize());
 		// Send the packet
 		if (api.lorawan.send(g_solution_data.getSize(), g_solution_data.getBuffer(), set_fPort, g_confirmed_mode, g_confirmed_retry))
 		{
-			MYLOG("UPLINK", "Packet enqueued, size %d", g_solution_data.getSize());
+			MYLOG("UPLINK", "Packet enqueued");
 			tx_active = true;
 		}
 		else
 		{
 			MYLOG("UPLINK", "Send failed");
 			tx_active = false;
-			// If it was motion triggered, reset the ACC interrupts
-			if (has_rak1904)
-			{
-				clear_int_rak1904();
-			}
 		}
 	}
 	// It is P2P
 	else
 	{
-		MYLOG("UPLINK", "Send packet with size 4 over P2P");
+		MYLOG("UPLINK", "Send P2P packet with size %d", g_solution_data.getSize());
 
 		digitalWrite(LED_BLUE, LOW);
 
@@ -408,11 +348,6 @@ void send_packet(void)
 		else
 		{
 			MYLOG("UPLINK", "Send failed");
-			// If it was motion triggered, reset the ACC interrupts
-			if (has_rak1904)
-			{
-				clear_int_rak1904();
-			}
 		}
 	}
 }
