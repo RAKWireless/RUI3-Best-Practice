@@ -276,6 +276,8 @@ void setup()
 
 	// Set last trigger time to boot time
 	last_trigger = millis();
+
+	digitalWrite(WB_IO2, LOW);
 }
 
 /**

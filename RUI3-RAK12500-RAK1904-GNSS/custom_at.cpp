@@ -169,6 +169,7 @@ int interval_min_handler(SERIAL_PORT port, char *cmd, stParam *param)
 
 	return AT_OK;
 }
+
 /**
  * @brief Add custom Status AT commands
  *
