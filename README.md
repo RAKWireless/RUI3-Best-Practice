@@ -44,8 +44,8 @@ The following modules are supported by RUI3:
 | [RAK11721 breakout board](https://docs.rakwireless.com/Product-Categories/WisDuo/RAK11721-Breakout-Board/Overview/)     |  |
 
 #### ⚠️ Important note about RUI3 version compatibility 
-These examples require at least RUI3 V4.1.0 or newer.
-RUI3 V4.1.0 can be installed by using the Arduino BSP JSON file _**`package_rakwireless.com_rui_index.json`**_ that can be found in the [BSP repository](https://github.com/RAKWireless/RAKwireless-Arduino-BSP-Index).     
+These examples require at least RUI3 V4.1.1 or newer.
+At the time this code was published, RUI3 V4.1.1 was still in staging. It can be installed by using the Arduino BSP JSON file for the staging version by using  _**`https://raw.githubusercontent.com/RAKWireless/RAKwireless-Arduino-BSP-Index/staging/RUI_4.1.1_266/package_rakwireless_com_rui_index.json`**_ in the **`Additional Boards Manager URLs`** settingh in ArduinoIDE.     
 Installation guides for Arduino IDE and Visual Studio Code can be found in the [RAK Documentation Center](https://docs.rakwireless.com/RUI3/Supported-IDE/).
 
 ----
