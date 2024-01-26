@@ -238,7 +238,11 @@ void setup()
 	api.ble.advertise.start(30);
 #endif
 
+#ifndef rak11720
 	analogReference(AR_INTERNAL_3_0);
+#else
+	analogReference(AR_INTERNAL_1_5);
+#endif
 	analogOversampling(128);
 
 	digitalWrite(LED_BLUE, LOW);
@@ -288,9 +292,13 @@ void sensor_handler(void *)
 	}
 	average_raw_1 = mcu_ain_raw_1 / 10;
 
+#ifdef rak11720
+	mcu_ain_voltage_1 = average_raw_1 * 1.5 / 1024; // raef 1.5V / 10bit ADC
+	voltage_sensor_1 = mcu_ain_voltage_1 / 0.3;		// WisBlock RAK5811 (0 ~ 5V).   Input signal reduced to 6/10 and output
+#else
 	mcu_ain_voltage_1 = average_raw_1 * 3.0 / 1024; // raef 3.0V / 10bit ADC
-
-	voltage_sensor_1 = mcu_ain_voltage_1 / 0.6; // WisBlock RAK5811 (0 ~ 5V).   Input signal reduced to 6/10 and output
+	voltage_sensor_1 = mcu_ain_voltage_1 / 0.6;		// WisBlock RAK5811 (0 ~ 5V).   Input signal reduced to 6/10 and output
+#endif
 
 	for (i = 0; i < 10; i++)
 	{
@@ -298,9 +306,13 @@ void sensor_handler(void *)
 	}
 	average_raw_0 = mcu_ain_raw_0 / 10;
 
+#ifdef rak11720
+	mcu_ain_voltage_0 = average_raw_0 * 1.5 / 1024; // raef 1.5V / 10bit ADC
+	voltage_sensor_0 = mcu_ain_voltage_0 / 0.3;		// WisBlock RAK5811 (0 ~ 5V).   Input signal reduced to 6/10 and output
+#else
 	mcu_ain_voltage_0 = average_raw_0 * 3.0 / 1024; // raef 3.0V / 10bit ADC
-
-	voltage_sensor_0 = mcu_ain_voltage_0 / 0.6; // WisBlock RAK5811 (0 ~ 5V).   Input signal reduced to 6/10 and output
+	voltage_sensor_0 = mcu_ain_voltage_0 / 0.6;		// WisBlock RAK5811 (0 ~ 5V).   Input signal reduced to 6/10 and output
+#endif
 
 	// Clear payload
 	g_solution_data.reset();

@@ -13,6 +13,15 @@
 // Enable/Disable gas resistance measurements 0 = off, 1 = on
 #define USE_GAS 0
 
+/** Last temperature read */
+float _last_bme_temp = 0;
+/** Last humidity read */
+float _last_bme_humid = 0;
+/** Flag if values were read already (used by RAK12047 VOC sensor) */
+bool _has_last_bme_values = false;
+/** Counter to discard saved values after some time */
+uint8_t t_h_discard_counter = 0;
+
 #if defined(_VARIANT_RAK3172_) || defined(_VARIANT_RAK3172_SIP_)
 
 // Smaller library used for RAK3172 versions to reduce code size
@@ -22,15 +31,6 @@
 
 /** BME680 instance for Wire */
 rak1906 bme;
-
-/** Last temperature read */
-float _last_bme_temp = 0;
-/** Last humidity read */
-float _last_bme_humid = 0;
-/** Flag if values were read already (used by RAK12047 VOC sensor) */
-bool _has_last_bme_values = false;
-/** Counter to discard saved values after some time */
-uint8_t t_h_discard_counter = 0;
 
 /**
  * @brief Initialize the BME680 sensor
