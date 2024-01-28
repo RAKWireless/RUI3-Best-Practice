@@ -87,6 +87,11 @@ _**⚠️ INFORMATION**_
 This example uses a modified version of the [Modbus-Master-Slave-for-Arduino](https://github.com/smarmengol/Modbus-Master-Slave-for-Arduino) library. This library was choosen because of its small code size. However, due to some incompatible definitions, it did not compile with RUI3. The library was slightly modified to work with RUI3 and is included as project files _**`RUI3_ModbusRtu.cpp`**_ and _**`RUI3_ModbusRtu.h`**_.    
 The original libray is licensed under the [GNU LESSER GENERAL PUBLIC LICENSE Version 2.1](https://github.com/smarmengol/Modbus-Master-Slave-for-Arduino/blob/master/LICENSE.md)
 
+## [RUI3-Mesh](./RUI3-Mesh)
+This is a PoC of a simple LoRa Mesh Network. It includes everything to setup a Mesh Network (compatible with [WisBlock-API-Mesh](https://github.com/beegee-tokyo/WisBlock-API-Mesh)).    
+It supports a limited number of Mesh nodes (15 with the RAK3172 and 30 with the RAK4630 and RAK11720) and sends a dummy data packet.    
+Beside of packet broadcasting it supports sending data to a specific other node and it is as well possible to define a master node to which all other nodes are sending the packets.    
+ 
 ----
 
 # Get RUI3 devices
