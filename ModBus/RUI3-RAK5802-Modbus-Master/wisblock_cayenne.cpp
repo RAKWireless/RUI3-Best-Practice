@@ -243,7 +243,7 @@ uint8_t WisCayenne::addGNSS_T(int32_t latitude, int32_t longitude, int16_t altit
 	_buffer[_cursor++] = (t >> 24) & 0xFF;
 	_buffer[_cursor++] = (t >> 16) & 0xFF;
 	_buffer[_cursor++] = (t >> 8) & 0xFF;
-	_buffer[_cursor++] = (t)&0xFF;
+	_buffer[_cursor++] = (t) & 0xFF;
 	_buffer[_cursor++] = ((altitude + 1000) >> 8) & 0xFF;
 	_buffer[_cursor++] = ((altitude + 1000)) & 0xFF;
 	_buffer[_cursor++] = (uint8_t)(accuracy * 10.0);

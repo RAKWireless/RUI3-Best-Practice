@@ -34,6 +34,7 @@
 
 struct sensor_data_s
 {
+	int16_t coils;
 	int16_t temperature;
 	int16_t humidity;
 	int16_t pressure;
@@ -41,13 +42,13 @@ struct sensor_data_s
 };
 
 // Modbus stuff
-union au16data_u
+union coils_n_regs_u
 {
-	sensor_data_s sensor_data; // Temperature * 100, Humidity * 100, Barometric Pressure * 10, Battery * 100
-	int16_t data[4];
+	sensor_data_s sensor_data; // 16 coils, Temperature * 100, Humidity * 100, Barometric Pressure * 10, Battery * 100
+	int16_t data[5];
 };
 
-extern au16data_u au16data;
+extern coils_n_regs_u au16data;
 
 /** Custom flash parameters structure */
 struct custom_param_s

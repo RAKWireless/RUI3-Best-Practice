@@ -46,6 +46,6 @@ void read_rak1901(void)
 
 	MYLOG("T_H", "T: %.2f H: %.2f", temp_f, humid_f);
 
-	au16data.sensor_data.temperature = (int16_t)(temp_f * 100);
-	au16data.sensor_data.humidity = (int16_t)(humid_f * 100);
+	coils_n_regs.sensor_data.temperature = (int16_t)(temp_f * 100);
+	coils_n_regs.sensor_data.humidity = (int16_t)(humid_f * 100);
 }

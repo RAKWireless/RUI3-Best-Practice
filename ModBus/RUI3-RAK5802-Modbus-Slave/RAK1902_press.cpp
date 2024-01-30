@@ -52,5 +52,5 @@ void read_rak1902(void)
 
 	MYLOG("PRESS", "P: %.2f", pressure);
 
-	au16data.sensor_data.pressure = (int16_t)(pressure * 10);
+	coils_n_regs.sensor_data.pressure = (int16_t)(pressure * 10);
 }

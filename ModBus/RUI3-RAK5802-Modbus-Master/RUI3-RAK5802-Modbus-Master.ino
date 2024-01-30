@@ -10,8 +10,8 @@
  */
 #include "app.h"
 
-// data array for modbus network sharing
-union au16data_u au16data = {0, 0, 0, 0};
+/** Data array for modbus 16 coils at index 0 and registers at index 1 to 4 */
+union coils_n_regs_u coils_n_regs = {0, 0, 0, 0, 0};
 
 /**
  *  Modbus object declaration
@@ -22,10 +22,19 @@ union au16data_u au16data = {0, 0, 0, 0};
  */
 Modbus master(0, Serial1, 0); // this is master and RS-232 or USB-FTDI
 
-/**
- * This is an structe which contains a query to an slave device
- */
+/** This is an structure which contains a query to an slave device */
 modbus_t telegram;
+
+/** This is the structure which contains a write to set/reset coils */
+struct coil_s
+{
+	int8_t dev_addr = 1;
+	int8_t coils[16];
+	int8_t num_coils = 0;
+};
+
+/** Coils structure */
+coil_s coil_data;
 
 /** Packet is confirmed/unconfirmed (Set with AT commands) */
 bool g_confirmed_mode = false;
@@ -33,9 +42,6 @@ bool g_confirmed_mode = false;
 uint8_t g_confirmed_retry = 0;
 /** Data rate  (Set with AT commands) */
 uint8_t g_data_rate = 3;
-
-/** Flag if transmit is active, used by some sensors */
-volatile bool tx_active = false;
 
 /** fPort to send packages */
 uint8_t set_fPort = 2;
@@ -76,7 +82,56 @@ void receiveCallback(SERVICE_LORA_RECEIVE_T *data)
 		Serial.printf("%02X", data->Buffer[i]);
 	}
 	Serial.print("\r\n");
-	tx_active = false;
+
+	// Check for command fPort
+	if (data->Port == 0)
+	{
+		MYLOG("RX-CB", "MAC command");
+		return;
+	}
+	// Check for valid command sequence
+	if ((data->Buffer[0] == 0xAA) && (data->Buffer[1] == 0x55))
+	{
+		// Check for command (only MB_FC_WRITE_MULTIPLE_COILS supported atm)
+		if (data->Buffer[2] == MB_FC_WRITE_MULTIPLE_COILS)
+		{
+			// Get slave address
+			coil_data.dev_addr = data->Buffer[3];
+			if ((coil_data.dev_addr > 0) && (coil_data.dev_addr < 17))
+			{
+				// Get number of coils
+				coil_data.num_coils = data->Buffer[4];
+
+				// Check for coil number in range (1 to 16)
+				if ((coil_data.num_coils > 0) && (coil_data.num_coils < 17))
+				{
+					// Save coil status
+					for (int idx = 0; idx < coil_data.num_coils; idx++)
+					{
+						coil_data.coils[idx] = data->Buffer[5 + idx];
+					}
+					// Start a timer to handle the incoming coil write request.
+					api.system.timer.start(RAK_TIMER_1, 100, NULL);
+				}
+				else
+				{
+					MYLOG("RX_CB", "Wrong num of coils");
+				}
+			}
+			else
+			{
+				MYLOG("RX_CB", "invalid slave address");
+			}
+		}
+		else
+		{
+			MYLOG("RX_CB", "Wrong command");
+		}
+	}
+	else
+	{
+		MYLOG("RX_CB", "Wrong format");
+	}
 }
 
 /**
@@ -88,7 +143,6 @@ void sendCallback(int32_t status)
 {
 	MYLOG("TX-CB", "TX status %d", status);
 	digitalWrite(LED_BLUE, LOW);
-	tx_active = false;
 }
 
 /**
@@ -104,7 +158,50 @@ void recv_cb(rui_lora_p2p_recv_t data)
 		Serial.printf("%02X", data.Buffer[i]);
 	}
 	Serial.print("\r\n");
-	tx_active = false;
+
+	// Check for valid command sequence
+	if ((data->Buffer[0] == 0xAA) && (data->Buffer[1] == 0x55))
+	{
+		// Check for command (only MB_FC_WRITE_MULTIPLE_COILS supported atm)
+		if (data->Buffer[2] == MB_FC_WRITE_MULTIPLE_COILS)
+		{
+			// Get slave address
+			coil_data.dev_addr = data->Buffer[3];
+			if ((coil_data.dev_addr > 0) && (coil_data.dev_addr < 17))
+			{
+				// Get number of coils
+				coil_data.num_coils = data->Buffer[4];
+
+				// Check for coil number in range (1 to 16)
+				if ((coil_data.num_coils > 0) && (coil_data.num_coils < 17))
+				{
+					// Save coil status
+					for (int idx = 0; idx < coil_data.num_coils; idx++)
+					{
+						coil_data.coils[idx] = data->Buffer[5 + idx];
+					}
+					// Start a timer to handle the incoming coil write request.
+					api.system.timer.start(RAK_TIMER_1, 100, NULL);
+				}
+				else
+				{
+					MYLOG("RX_CB", "Wrong num of coils");
+				}
+			}
+			else
+			{
+				MYLOG("RX_CB", "invalid slave address");
+			}
+		}
+		else
+		{
+			MYLOG("RX_CB", "Wrong command");
+		}
+	}
+	else
+	{
+		MYLOG("RX_CB", "Wrong format");
+	}
 }
 
 /**
@@ -115,7 +212,6 @@ void send_cb(void)
 {
 	MYLOG("TX-P2P-CB", "P2P TX finished");
 	digitalWrite(LED_BLUE, LOW);
-	tx_active = false;
 }
 
 /**
@@ -194,18 +290,21 @@ void setup()
 	Serial1.begin(19200); // baud-rate at 19200
 	master.start();
 	master.setTimeOut(2000); // if there is no answer in 2000 ms, roll over
-	
-	// Create a timer.
-	api.system.timer.create(RAK_TIMER_0, sensor_handler, RAK_TIMER_PERIODIC);
+
+	// Create a timer for interval reading of sensor from Modbus slave.
+	api.system.timer.create(RAK_TIMER_0, modbus_read_register, RAK_TIMER_PERIODIC);
 	// Start a timer.
 	api.system.timer.start(RAK_TIMER_0, custom_parameters.send_interval, NULL);
+
+	// Create a timer for handling downlink write request to Modbus slave.
+	api.system.timer.create(RAK_TIMER_1, modbus_write_coil, RAK_TIMER_ONESHOT);
 
 	// Check if it is LoRa P2P
 	if (api.lorawan.nwm.get() == 0)
 	{
 		digitalWrite(LED_BLUE, LOW);
 
-		sensor_handler(NULL);
+		modbus_read_register(NULL);
 	}
 
 	if (api.lorawan.nwm.get() == 1)
@@ -238,18 +337,18 @@ void setup()
 	digitalWrite(WB_IO2, LOW);
 }
 
-void sensor_handler(void *)
+void modbus_read_register(void *)
 {
 	digitalWrite(WB_IO2, HIGH);
-	MYLOG("SENS", "Send request over ModBus");
+	MYLOG("MODR", "Send read request over ModBus");
 
-	au16data.data[0] = au16data.data[1] = au16data.data[2] = au16data.data[3] = 0;
+	coils_n_regs.data[1] = coils_n_regs.data[2] = coils_n_regs.data[3] = coils_n_regs.data[4] = 0;
 
-	telegram.u8id = 1;				  // slave address
-	telegram.u8fct = 3;				  // function code (this one is registers read)
-	telegram.u16RegAdd = 0;			  // start address in slave
-	telegram.u16CoilsNo = 4;		  // number of elements (coils or registers) to read
-	telegram.au16reg = au16data.data; // pointer to a memory array in the Arduino
+	telegram.u8id = 1;					   // slave address
+	telegram.u8fct = MB_FC_READ_REGISTERS; // function code (this one is registers read)
+	telegram.u16RegAdd = 0;				   // start address in slave
+	telegram.u16CoilsNo = 5;			   // number of elements (coils or registers) to read
+	telegram.au16reg = coils_n_regs.data;  // pointer to a memory array in the Arduino
 
 	master.query(telegram); // send query (only once)
 
@@ -261,38 +360,38 @@ void sensor_handler(void *)
 		master.poll(); // check incoming messages
 		if (master.getState() == COM_IDLE)
 		{
-			if ((au16data.data[0] == 0) && (au16data.data[1] == 0) && (au16data.data[2] == 0) && (au16data.data[3] == 0))
+			if ((coils_n_regs.data[1] == 0) && (coils_n_regs.data[2] == 0) && (coils_n_regs.data[3] == 0) && (coils_n_regs.data[4] == 0))
 			{
-				MYLOG("SENS", "No data received");
+				MYLOG("MODR", "No data received");
 				break;
 			}
 			else
 			{
-				MYLOG("SENS", "Temperature = %.2f", au16data.sensor_data.temperature / 100.0);
-				MYLOG("SENS", "Humidity = %.2f", au16data.sensor_data.humidity / 100.0);
-				MYLOG("SENS", "Barometer = %.1f", au16data.sensor_data.pressure / 10.0);
-				MYLOG("SENS", "Battery = %.2f", au16data.sensor_data.battery / 100.0);
+				MYLOG("MODR", "Temperature = %.2f", coils_n_regs.sensor_data.temperature / 100.0);
+				MYLOG("MODR", "Humidity = %.2f", coils_n_regs.sensor_data.humidity / 100.0);
+				MYLOG("MODR", "Barometer = %.1f", coils_n_regs.sensor_data.pressure / 10.0);
+				MYLOG("MODR", "Battery = %.2f", coils_n_regs.sensor_data.battery / 100.0);
 
 				data_ready = true;
 
 				// Clear payload
 				g_solution_data.reset();
 
-				if (au16data.sensor_data.temperature != 0)
+				if (coils_n_regs.sensor_data.temperature != 0)
 				{
-					g_solution_data.addTemperature(LPP_CHANNEL_TEMP, au16data.sensor_data.temperature / 100.0);
+					g_solution_data.addTemperature(LPP_CHANNEL_TEMP, coils_n_regs.sensor_data.temperature / 100.0);
 				}
-				if (au16data.sensor_data.humidity != 0)
+				if (coils_n_regs.sensor_data.humidity != 0)
 				{
-					g_solution_data.addRelativeHumidity(LPP_CHANNEL_HUMID, au16data.sensor_data.humidity / 100.0);
+					g_solution_data.addRelativeHumidity(LPP_CHANNEL_HUMID, coils_n_regs.sensor_data.humidity / 100.0);
 				}
-				if (au16data.sensor_data.pressure != 0)
+				if (coils_n_regs.sensor_data.pressure != 0)
 				{
-					g_solution_data.addBarometricPressure(LPP_CHANNEL_PRESS, au16data.sensor_data.pressure / 10.0);
+					g_solution_data.addBarometricPressure(LPP_CHANNEL_PRESS, coils_n_regs.sensor_data.pressure / 10.0);
 				}
-				if (au16data.sensor_data.battery != 0)
+				if (coils_n_regs.sensor_data.battery != 0)
 				{
-					g_solution_data.addVoltage(LPP_CHANNEL_TEMP, au16data.sensor_data.battery / 100.0);
+					g_solution_data.addVoltage(LPP_CHANNEL_TEMP, coils_n_regs.sensor_data.battery / 100.0);
 				}
 
 				float battery_reading = 0.0;
@@ -316,6 +415,55 @@ void sensor_handler(void *)
 		// Send the packet
 		send_packet();
 	}
+	digitalWrite(WB_IO2, LOW);
+}
+
+void modbus_write_coil(void *)
+{
+	// Coils are in 16 bit register in form of 7-0, 15-8
+	digitalWrite(WB_IO2, HIGH);
+	MYLOG("MODW", "Send write coil request over ModBus");
+
+	MYLOG("MODW", "Num of coils %d", coil_data.num_coils);
+
+	// Reset the register
+	coils_n_regs.data[0] = 0;
+
+	// Prepare coils STATUS
+	uint8_t coil_shift = 8;
+	for (int idx = 0; idx < coil_data.num_coils; idx++)
+	{
+		MYLOG("MODW", "Coil %d %s %d", idx, coil_data.coils[idx] == 0 ? "off" : "on", coil_data.coils[idx] << coil_shift);
+		coils_n_regs.data[0] |= coil_data.coils[idx] << coil_shift;
+		MYLOG("MODW", "Coil data %02X", coils_n_regs.data[0]);
+		coil_shift++;
+		if (coil_shift == 16)
+		{
+			coil_shift = 0;
+		}
+	}
+	MYLOG("MODW", "Coil data %02X", coils_n_regs.data[0]);
+
+	telegram.u8id = coil_data.dev_addr;			 // slave address
+	telegram.u8fct = MB_FC_WRITE_MULTIPLE_COILS; // function code (this one is coil write)
+	telegram.u16RegAdd = 0;						 // start address in slave
+	telegram.u16CoilsNo = coil_data.num_coils;	 // number of elements (coils or registers) to write
+	telegram.au16reg = coils_n_regs.data;		 // pointer to a memory array in the Arduino
+
+	master.query(telegram); // send query (only once)
+
+	time_t start_poll = millis();
+
+	while ((millis() - start_poll) < 5000)
+	{
+		master.poll(); // check incoming messages
+		if (master.getState() == COM_IDLE)
+		{
+			MYLOG("MODW", "Write done");
+			break;
+		}
+	}
+
 	digitalWrite(WB_IO2, LOW);
 }
 
@@ -345,12 +493,10 @@ void send_packet(void)
 		if (api.lorawan.send(g_solution_data.getSize(), g_solution_data.getBuffer(), set_fPort, g_confirmed_mode, g_confirmed_retry))
 		{
 			MYLOG("UPLINK", "Packet enqueued, size %d", g_solution_data.getSize());
-			tx_active = true;
 		}
 		else
 		{
 			MYLOG("UPLINK", "Send failed");
-			tx_active = false;
 		}
 	}
 	// It is P2P

@@ -10,8 +10,8 @@
  */
 #include "app.h"
 
-// data array for modbus network sharing
-union au16data_u au16data = {0, 0, 0, 0};
+/** Data array for modbus 16 coils at index 0 and registers at index 1 to 4 */
+union coils_n_regs_u coils_n_regs = {0, 0, 0, 0, 0};
 
 /**
  *  Modbus object declaration
@@ -40,6 +40,11 @@ void setup()
 	Serial.begin(115200);
 	pinMode(WB_IO2, OUTPUT);
 	digitalWrite(WB_IO2, HIGH);
+	pinMode(LED_GREEN, OUTPUT);
+	digitalWrite(LED_GREEN, LOW);
+	pinMode(LED_BLUE, OUTPUT);
+	digitalWrite(LED_BLUE, LOW);
+
 	Serial1.begin(19200); // baud-rate at 19200
 	slave.start();
 	while (Serial1.available())
@@ -100,12 +105,13 @@ void sensor_handler(void *)
 	}
 
 	battery_reading = battery_reading / 10;
-	au16data.sensor_data.battery = (int16_t)(battery_reading * 100);
+	coils_n_regs.sensor_data.battery = (int16_t)(battery_reading * 100);
 
-	MYLOG("SENS", "Data[0] = %d", au16data.data[0]);
-	MYLOG("SENS", "Data[1] = %d", au16data.data[1]);
-	MYLOG("SENS", "Data[2] = %d", au16data.data[2]);
-	MYLOG("SENS", "Data[3] = %d", au16data.data[3]);
+	MYLOG("SENS", "Data[0] = %d", coils_n_regs.data[0]);
+	MYLOG("SENS", "Data[1] = %d", coils_n_regs.data[1]);
+	MYLOG("SENS", "Data[2] = %d", coils_n_regs.data[2]);
+	MYLOG("SENS", "Data[3] = %d", coils_n_regs.data[3]);
+	MYLOG("SENS", "Data[4] = %d", coils_n_regs.data[4]);
 	sensor_active = false;
 }
 
@@ -113,10 +119,18 @@ void loop()
 {
 	if (!sensor_active)
 	{
-		int8_t result = slave.poll(au16data.data, 4);
+		int8_t result = slave.poll(coils_n_regs.data, 5);
 		if (result != 0)
 		{
 			MYLOG("POLL", "Poll result is %d", result);
+
+			MYLOG("SENS", "Data[0] = %d", coils_n_regs.data[0]);
+			MYLOG("SENS", "Data[1] = %d", coils_n_regs.data[1]);
+			MYLOG("SENS", "Data[2] = %d", coils_n_regs.data[2]);
+			MYLOG("SENS", "Data[3] = %d", coils_n_regs.data[3]);
+			MYLOG("SENS", "Data[4] = %d", coils_n_regs.data[4]);
+			digitalWrite(LED_GREEN, bitRead(coils_n_regs.data[0], 0) == 0 ? LOW : HIGH);
+			digitalWrite(LED_BLUE, bitRead(coils_n_regs.data[0], 1) == 0 ? LOW : HIGH);
 		}
 	}
 }

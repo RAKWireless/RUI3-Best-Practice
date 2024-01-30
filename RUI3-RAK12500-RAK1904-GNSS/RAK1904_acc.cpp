@@ -179,16 +179,19 @@ void int_callback_rak1904(void)
 	{
 		MYLOG("ACC", "GNSS %s, time since last trigger %0.3f s", gnss_active ? "active" : "not active", (float)((millis() - last_trigger) / 1000.0));
 		motion_detected = true;
-		// Stop a timer.
-		api.system.timer.stop(RAK_TIMER_0);
-		// Start a timer.
-		api.system.timer.start(RAK_TIMER_0, custom_parameters.send_interval, NULL);
+		if (custom_parameters.send_interval != 0)
+		{
+			// Stop a timer.
+			api.system.timer.stop(RAK_TIMER_0);
+			// Start a timer.
+			api.system.timer.start(RAK_TIMER_0, custom_parameters.send_interval, NULL);
+		} 
 		// Wake the handler and start location acquisition
 		api.system.timer.start(RAK_TIMER_2, 100, NULL);
 	}
 	else
 	{
-		MYLOG("ACC", "GNSS %s, time since last trigger %0.3f s", gnss_active ? "active" : "not active", (float)((millis() - last_trigger)/1000.0));
+		MYLOG("ACC", "GNSS %s, time since last trigger %0.3f s", gnss_active ? "active" : "not active", (float)((millis() - last_trigger) / 1000.0));
 		clear_int_rak1904();
 		motion_detected = false;
 	}

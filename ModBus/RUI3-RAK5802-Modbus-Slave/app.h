@@ -4,9 +4,9 @@
  * @brief Includes and defines
  * @version 0.1
  * @date 2024-01-17
- * 
+ *
  * @copyright Copyright (c) 2024
- * 
+ *
  */
 
 #include <Arduino.h>
@@ -38,17 +38,19 @@ void read_rak1901(void);
 bool init_rak1902(void);
 void read_rak1902(void);
 
-struct sensor_data_s {
+struct sensor_data_s
+{
+	int16_t coils;
 	int16_t temperature;
 	int16_t humidity;
 	int16_t pressure;
 	int16_t battery;
 };
 
-union au16data_u
+union coils_n_regs_u
 {
-	sensor_data_s sensor_data; // Temperature * 100, Humidity * 100, Barometric Pressure * 10, Battery * 100
-	int16_t data[4];
+	sensor_data_s sensor_data; // Temperature * 100, Humidity * 100, Barometric Pressure * 10, Battery * 100, 16 coils
+	int16_t data[5];
 };
 
-extern au16data_u au16data;
+extern coils_n_regs_u coils_n_regs;

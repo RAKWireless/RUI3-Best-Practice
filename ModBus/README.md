@@ -3,11 +3,18 @@
 
 # Example for a simple Modbus Master with RAK5802 and RUI3
 
-This example is a simple Modbus Master that reads sensor values from a Modbus Slave. For easy testing a Modbus Slave application is available for another WisBlock/WisDuo based module with a temperature, humidity and barometric pressure sensor.    
+This example is a simple Modbus Master that reads sensor values from a Modbus Slave. For easy testing a Modbus Slave application is available for another WisBlock/WisDuo based module with a temperature, humidity and barometric pressure sensor. It supports as well control of two coils. On the slave application the two coils are mapped to the green and blue LED"s of the WisBlock Base Board.    
 
 This example code is _**NOT**_ using the loop at all. Instead it is complete event driven. The WisDuo/WisBlock module is sleeping unless an event occurs. An event can be a timer callback or an external interrupt, or if using LoRaWAN Class C, it can be a packet received from the LoRaWAN server.
 
-(1) A simple Modbus master that uses a timer to wake up the device in the desired send interval, retrieves sensor values from the Modbus slave and send them over LoRaWAN. Then the system goes back to sleep automatically. The code for the master is in the [RUI3-RAK5802-Modbus-Master](./RUI3-RAK5802-Modbus-Master) folder.    
+(1) A simple Modbus master that uses a timer to wake up the device in the desired send interval, retrieves sensor values from the Modbus slave and send them over LoRaWAN. Then the system goes back to sleep automatically. The code for the master is in the [RUI3-RAK5802-Modbus-Master](./RUI3-RAK5802-Modbus-Master) folder.     
+
+To control the coils a downlink from the LoRaWAN server is required. The downlink packet format is     
+`AA55ddnnv1v2` as hex values    
+AA55 is a simple packet marker    
+dd is the slave address
+nn is the number of coils to write
+v1, v2 are the coil status. 0 ==> coil off, >0 ==> coil on
    
 (2) A simple Modbus slave that reads temperature, humidity and barometric pressure from a RAK1901 and RAK1902 module. It offers then the acquired values in 4 registers. This example does not include any coils to set or read binary values. The code for the slave is in the [RUI3-RAK5802-Modbus-Slave](./RUI3-RAK5802-Modbus-Slave) folder. This example is not optimized for low power consumption as the Modbus Slave has to listen all the time for incoming messages over the RS485 port.   
 
@@ -54,11 +61,62 @@ void sendCallback(int32_t status)
 ```
 
 LoRaWAN RX callback is called when a data packet was received from the LoRaWAN server. The callback has as parameter a pointer to a structure with information about the received data and pointers to the payload and its length.    
+The received packet is analyzed if it is a coil write command.
 
 ```cpp
 void receiveCallback(SERVICE_LORA_RECEIVE_T *data)
 {
 	MYLOG("RX-CB", "RX, port %d, DR %d, RSSI %d, SNR %d", data->Port, data->RxDatarate, data->Rssi, data->Snr);
+
+	// Check for command fPort
+	if (data->Port == 0)
+	{
+		MYLOG("RX-CB", "MAC command");
+		return;
+	}
+	// Check for valid command sequence
+	if ((data->Buffer[0] == 0xAA) && (data->Buffer[1] == 0x55))
+	{
+		// Check for command (only MB_FC_WRITE_MULTIPLE_COILS supported atm)
+		if (data->Buffer[2] == MB_FC_WRITE_MULTIPLE_COILS)
+		{
+			// Get slave address
+			coil_data.dev_addr = data->Buffer[3];
+			if ((coil_data.dev_addr > 0) && (coil_data.dev_addr < 17))
+			{
+				// Get number of coils
+				coil_data.num_coils = data->Buffer[4];
+
+				// Check for coil number in range (1 to 16)
+				if ((coil_data.num_coils > 0) && (coil_data.num_coils < 17))
+				{
+					// Save coil status
+					for (int idx = 0; idx < coil_data.num_coils; idx++)
+					{
+						coil_data.coils[idx] = data->Buffer[5 + idx];
+					}
+					// Start a timer to handle the incoming coil write request.
+					api.system.timer.start(RAK_TIMER_1, 100, NULL);
+				}
+				else
+				{
+					MYLOG("RX_CB", "Wrong num of coils");
+				}
+			}
+			else
+			{
+				MYLOG("RX_CB", "invalid slave address");
+			}
+		}
+		else
+		{
+			MYLOG("RX_CB", "Wrong command");
+		}
+	}
+	else
+	{
+		MYLOG("RX_CB", "Wrong format");
+	}
 }
 ```
 
@@ -141,7 +199,7 @@ void loop()
 
 This functions are where the action is happening. 
 
-**`sensor_handler`** is called by the timer. First it will send a query to the Modbus Slave device on address 1 to get the latest sensor values. The sensor values are provided in 4 Modbus registers. As Modbus standard does not define float values, the sensor data is received as integer with a multiplier applied.
+**`modbus_read_register`** is called by the timer. First it will send a query to the Modbus Slave device on address 1 to get the latest sensor values. The sensor values are provided in 4 Modbus registers. As Modbus standard does not define float values, the sensor data is received as integer with a multiplier applied.
 - Temperature is multiplied by 100
 - Humidity is multiplied by 100
 - Barometer is multiplied by 10
@@ -150,18 +208,16 @@ This functions are where the action is happening.
 If data could be retrieved from the Modbus Slave, the data is added to the LoRaWAN payload.
 
 ```cpp
-void sensor_handler(void *)
-{
 	digitalWrite(WB_IO2, HIGH);
-	MYLOG("SENS", "Send request over ModBus");
+	MYLOG("MODR", "Send read request over ModBus");
 
-	au16data.data[0] = au16data.data[1] = au16data.data[2] = au16data.data[3] = 0;
+	coils_n_regs.data[1] = coils_n_regs.data[2] = coils_n_regs.data[3] = coils_n_regs.data[4] = 0;
 
-	telegram.u8id = 1;				  // slave address
-	telegram.u8fct = 3;				  // function code (this one is registers read)
-	telegram.u16RegAdd = 0;			  // start address in slave
-	telegram.u16CoilsNo = 4;		  // number of elements (coils or registers) to read
-	telegram.au16reg = au16data.data; // pointer to a memory array in the Arduino
+	telegram.u8id = 1;					   // slave address
+	telegram.u8fct = MB_FC_READ_REGISTERS; // function code (this one is registers read)
+	telegram.u16RegAdd = 0;				   // start address in slave
+	telegram.u16CoilsNo = 5;			   // number of elements (coils or registers) to read
+	telegram.au16reg = coils_n_regs.data;  // pointer to a memory array in the Arduino
 
 	master.query(telegram); // send query (only once)
 
@@ -173,38 +229,38 @@ void sensor_handler(void *)
 		master.poll(); // check incoming messages
 		if (master.getState() == COM_IDLE)
 		{
-			if ((au16data.data[0] == 0) && (au16data.data[1] == 0) && (au16data.data[2] == 0) && (au16data.data[3] == 0))
+			if ((coils_n_regs.data[1] == 0) && (coils_n_regs.data[2] == 0) && (coils_n_regs.data[3] == 0) && (coils_n_regs.data[4] == 0))
 			{
-				MYLOG("SENS", "No data received");
+				MYLOG("MODR", "No data received");
 				break;
 			}
 			else
 			{
-				MYLOG("SENS", "Temperature = %.2f", au16data.sensor_data.temperature / 100.0);
-				MYLOG("SENS", "Humidity = %.2f", au16data.sensor_data.humidity / 100.0);
-				MYLOG("SENS", "Barometer = %.1f", au16data.sensor_data.pressure / 10.0);
-				MYLOG("SENS", "Battery = %.2f", au16data.sensor_data.battery / 100.0);
+				MYLOG("MODR", "Temperature = %.2f", coils_n_regs.sensor_data.temperature / 100.0);
+				MYLOG("MODR", "Humidity = %.2f", coils_n_regs.sensor_data.humidity / 100.0);
+				MYLOG("MODR", "Barometer = %.1f", coils_n_regs.sensor_data.pressure / 10.0);
+				MYLOG("MODR", "Battery = %.2f", coils_n_regs.sensor_data.battery / 100.0);
 
 				data_ready = true;
 
 				// Clear payload
 				g_solution_data.reset();
 
-				if (au16data.sensor_data.temperature != 0)
+				if (coils_n_regs.sensor_data.temperature != 0)
 				{
-					g_solution_data.addTemperature(LPP_CHANNEL_TEMP, au16data.sensor_data.temperature / 100.0);
+					g_solution_data.addTemperature(LPP_CHANNEL_TEMP, coils_n_regs.sensor_data.temperature / 100.0);
 				}
-				if (au16data.sensor_data.humidity != 0)
+				if (coils_n_regs.sensor_data.humidity != 0)
 				{
-					g_solution_data.addRelativeHumidity(LPP_CHANNEL_HUMID, au16data.sensor_data.humidity / 100.0);
+					g_solution_data.addRelativeHumidity(LPP_CHANNEL_HUMID, coils_n_regs.sensor_data.humidity / 100.0);
 				}
-				if (au16data.sensor_data.pressure != 0)
+				if (coils_n_regs.sensor_data.pressure != 0)
 				{
-					g_solution_data.addBarometricPressure(LPP_CHANNEL_PRESS, au16data.sensor_data.pressure / 10.0);
+					g_solution_data.addBarometricPressure(LPP_CHANNEL_PRESS, coils_n_regs.sensor_data.pressure / 10.0);
 				}
-				if (au16data.sensor_data.battery != 0)
+				if (coils_n_regs.sensor_data.battery != 0)
 				{
-					g_solution_data.addVoltage(LPP_CHANNEL_TEMP, au16data.sensor_data.battery / 100.0);
+					g_solution_data.addVoltage(LPP_CHANNEL_TEMP, coils_n_regs.sensor_data.battery / 100.0);
 				}
 
 				float battery_reading = 0.0;
@@ -227,8 +283,66 @@ void sensor_handler(void *)
 If data could be retrieved from the Modbus Slave, the data is sent over Lora P2P or LoRaWAN.    
 
 ```cpp
-	// Send the packet
-	send_packet();
+
+	if (data_ready)
+	{
+		// Send the packet
+		send_packet();
+	}
+	digitalWrite(WB_IO2, LOW);
+}
+```
+
+**`modbus_write_coil`** is called if a valid downlink for coil control was received. It will initiate a coil write request to the Modbus slave device, based on the contenct of the received packet.    
+
+```cpp
+void modbus_write_coil(void *)
+{
+	// Coils are in 16 bit register in form of 7-0, 15-8
+	digitalWrite(WB_IO2, HIGH);
+	MYLOG("MODW", "Send write coil request over ModBus");
+
+	MYLOG("MODW", "Num of coils %d", coil_data.num_coils);
+
+	// Reset the register
+	coils_n_regs.data[0] = 0;
+
+	// Prepare coils STATUS
+	uint8_t coil_shift = 8;
+	for (int idx = 0; idx < coil_data.num_coils; idx++)
+	{
+		MYLOG("MODW", "Coil %d %s %d", idx, coil_data.coils[idx] == 0 ? "off" : "on", coil_data.coils[idx] << coil_shift);
+		coils_n_regs.data[0] |= coil_data.coils[idx] << coil_shift;
+		MYLOG("MODW", "Coil data %02X", coils_n_regs.data[0]);
+		coil_shift++;
+		if (coil_shift == 16)
+		{
+			coil_shift = 0;
+		}
+	}
+	MYLOG("MODW", "Coil data %02X", coils_n_regs.data[0]);
+
+	telegram.u8id = coil_data.dev_addr;			 // slave address
+	telegram.u8fct = MB_FC_WRITE_MULTIPLE_COILS; // function code (this one is coil write)
+	telegram.u16RegAdd = 0;						 // start address in slave
+	telegram.u16CoilsNo = coil_data.num_coils;	 // number of elements (coils or registers) to write
+	telegram.au16reg = coils_n_regs.data;		 // pointer to a memory array in the Arduino
+
+	master.query(telegram); // send query (only once)
+
+	time_t start_poll = millis();
+
+	while ((millis() - start_poll) < 5000)
+	{
+		master.poll(); // check incoming messages
+		if (master.getState() == COM_IDLE)
+		{
+			MYLOG("MODW", "Write done");
+			break;
+		}
+	}
+
+	digitalWrite(WB_IO2, LOW);
 }
 ```
 
