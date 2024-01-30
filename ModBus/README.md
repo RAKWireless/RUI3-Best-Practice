@@ -10,11 +10,11 @@ This example code is _**NOT**_ using the loop at all. Instead it is complete eve
 (1) A simple Modbus master that uses a timer to wake up the device in the desired send interval, retrieves sensor values from the Modbus slave and send them over LoRaWAN. Then the system goes back to sleep automatically. The code for the master is in the [RUI3-RAK5802-Modbus-Master](./RUI3-RAK5802-Modbus-Master) folder.     
 
 To control the coils a downlink from the LoRaWAN server is required. The downlink packet format is     
-`AA55ddnnv1v2` as hex values    
-AA55 is a simple packet marker    
-dd is the slave address
-nn is the number of coils to write
-v1, v2 are the coil status. 0 ==> coil off, >0 ==> coil on
+`AA55ddnnv1v2` as hex values       
+AA55 is a simple packet marker       
+dd is the slave address    
+nn is the number of coils to write     
+v1, v2 are the coil status. 0 ==> coil off, >0 ==> coil on    
    
 (2) A simple Modbus slave that reads temperature, humidity and barometric pressure from a RAK1901 and RAK1902 module. It offers then the acquired values in 4 registers. This example does not include any coils to set or read binary values. The code for the slave is in the [RUI3-RAK5802-Modbus-Slave](./RUI3-RAK5802-Modbus-Slave) folder. This example is not optimized for low power consumption as the Modbus Slave has to listen all the time for incoming messages over the RS485 port.   
 
