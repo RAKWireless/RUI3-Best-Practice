@@ -16,7 +16,7 @@ dd is the slave address
 nn is the number of coils to write     
 v1, v2 are the coil status. 0 ==> coil off, 1 ==> coil on    
    
-(2) A simple Modbus slave that reads temperature, humidity and barometric pressure from a RAK1901 and RAK1902 module. It offers then the acquired values in 4 registers. This example does not includes the control of two coils. The coils are represented as the blue and green LED on the WisBlock Base Board. The code for the slave is in the [RUI3-RAK5802-Modbus-Slave](./RUI3-RAK5802-Modbus-Slave) folder. This example is not optimized for low power consumption as the Modbus Slave has to listen all the time for incoming messages over the RS485 port.   
+(2) A simple Modbus slave that reads temperature, humidity and barometric pressure from a RAK1901 and RAK1902 module. It offers then the acquired values in 4 registers. This example does includes the control of two coils. The coils are represented as the blue and green LED on the WisBlock Base Board. The code for the slave is in the [RUI3-RAK5802-Modbus-Slave](./RUI3-RAK5802-Modbus-Slave) folder. This example is not optimized for low power consumption as the Modbus Slave has to listen all the time for incoming messages over the RS485 port.   
 
 ### ⚠️ INFORMATION    
 This example uses a modified version of the [Modbus-Master-Slave-for-Arduino](https://github.com/smarmengol/Modbus-Master-Slave-for-Arduino) library. This library was choosen because of its small code size. However, due to some incompatible definitions, it did not compile with RUI3. The library was slightly modified to work with RUI3 and is included as project files _**`RUI3_ModbusRtu.cpp`**_ and _**`RUI3_ModbusRtu.h`**_.    
