@@ -60,6 +60,11 @@ It includes as well a simple example how to implement custom AT commands.
 A simple sensor application based on RAK1901 and RAK1902. It reads temperature, humidity and barometric pressure from these sensors and sends them in a configurable interval.    
 This example is using the Cayenne LPP data format to send the formatted payload.    
 
+## [RUI3-Sensor-Node-EPD-2.13](./RUI3-Sensor-Node-EPD-2.13)    
+A simple sensor application based on RAK1906 and optional RAK1903 or RAK12010. It reads temperature, humidity and barometric pressure and environment light from these sensors. It displays the values on the RAK14000 and sends them in a configurable interval.    
+This example is using the Cayenne LPP data format to send the formatted payload.    
+Due to the memory required for driving the EPD, when using with the RAK3172, the LoRaWAN regions have to be reduced to a few to have enough flash available.    
+
 ## [RUI3-RAK12007-Waterlevel](./RUI3-RAK12007-Waterlevel)    
 This example uses the RAK12007 ultrasonic sensor module to measure the water level in a water tank.    
 This example is using the Cayenne LPP data format to send the formatted payload.    
