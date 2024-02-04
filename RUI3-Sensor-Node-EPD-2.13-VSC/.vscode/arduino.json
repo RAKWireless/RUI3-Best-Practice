@@ -1,0 +1,17 @@
+{
+    "sketch": "RUI3-Sensor-Node-EPD-2.13-VSC.ino",
+    "configuration": "debug=l0,supportat=1,supportlora=1,supportAS923=1,supportAU915=2,supportCN470=2,supportCN779=2,supportEU433=2,supportEU868=2,supportKR920=2,supportIN865=2,supportUS915=2,supportRU864=2,supportLA915=2",
+    "board": "rak_rui:stm32:WisDuoRAK3172EvaluationBoard",
+    "programmer": "rak_rui:nrfjprog",
+    "port": "COM24",
+    "output": "build",
+    "buildPreferences": [
+        [
+            "compiler.cpp.extra_flags",
+            "-DRUI_DEV=1"
+        ]
+    ],
+    "version": "1.0.1",
+    "project": "SensorNode",
+    "postbuild": "python rename.py"
+}

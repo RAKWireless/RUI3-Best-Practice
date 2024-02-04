@@ -5,6 +5,8 @@
 
 This repo provides additional examples for RUI3. It focuses on low power consumption and practical examples for range tests, location tracking and sensing applications using the WisBlock Modular System.    
 
+A collection of tips and tricks about the usage or RUI3 is as well available in the [Tips-n-Tricks](./Tips-n-Tricks.md) file.
+
 ### ⚠️ WARNING 
 _**Due to the limited Flash and RAM size of the RAK3172, some of the examples require code size reduction before they fit into the available memory!**_    
 _**Actions to reduce code size can be**_
@@ -45,7 +47,7 @@ The following modules are supported by RUI3:
 
 #### ⚠️ Important note about RUI3 version compatibility 
 These examples require at least RUI3 V4.1.1 or newer.
-At the time this code was published, RUI3 V4.1.1 was still in staging. It can be installed by using the Arduino BSP JSON file for the staging version by using  _**`https://raw.githubusercontent.com/RAKWireless/RAKwireless-Arduino-BSP-Index/staging/RUI_4.1.1_266/package_rakwireless_com_rui_index.json`**_ in the **`Additional Boards Manager URLs`** settingh in ArduinoIDE.     
+At the time this code was published, RUI3 V4.1.1 was still in staging. It can be installed by using the Arduino BSP JSON file for the staging version by using  _**`https://raw.githubusercontent.com/RAKWireless/RAKwireless-Arduino-BSP-Index/staging/RUI_4.1.1_266/package_rakwireless_com_rui_index.json`**_ in the **`Additional Boards Manager URLs`** settings in ArduinoIDE.     
 Installation guides for Arduino IDE and Visual Studio Code can be found in the [RAK Documentation Center](https://docs.rakwireless.com/RUI3/Supported-IDE/).
 
 ----
@@ -64,6 +66,9 @@ This example is using the Cayenne LPP data format to send the formatted payload.
 A simple sensor application based on RAK1906 and optional RAK1903 or RAK12010. It reads temperature, humidity and barometric pressure and environment light from these sensors. It displays the values on the RAK14000 and sends them in a configurable interval.    
 This example is using the Cayenne LPP data format to send the formatted payload.    
 Due to the memory required for driving the EPD, when using with the RAK3172, the LoRaWAN regions have to be reduced to a few to have enough flash available.    
+
+## [RUI3-Sensor-Node-EPD-2.13 for Visual Studio Code](./RUI3-Sensor-Node-EPD-2.13-VSC)    
+Same example as `RUI3-Sensor-Node-EPD-2.13`, but this project uses some of the VSC tricks from the [Tips-n-Tricks](Tips-n-Tricks.md) for Visual Studio Code.
 
 ## [RUI3-RAK12007-Waterlevel](./RUI3-RAK12007-Waterlevel)    
 This example uses the RAK12007 ultrasonic sensor module to measure the water level in a water tank.    

@@ -1,0 +1,7 @@
+{
+    "configuration": "debug=l0,supportat=1,supportlora=1,supportAS923=1,supportAU915=1,supportCN470=1,supportCN779=1,supportEU433=1,supportEU868=1,supportKR920=1,supportIN865=1,supportUS915=1,supportRU864=1,supportLA915=1",
+    "board": "rak_rui:apollo3:WisCoreRAK11720Board",
+    "port": "COM23",
+    "sketch": "RUI3-Mesh.ino",
+    "output": "build"
+}
