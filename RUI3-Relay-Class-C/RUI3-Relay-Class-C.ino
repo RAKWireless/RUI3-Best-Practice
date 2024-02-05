@@ -10,6 +10,8 @@
  */
 #include "app.h"
 
+#define RELAY_IO WB_IO4
+
 /** Packet is confirmed/unconfirmed (Set with AT commands) */
 bool g_confirmed_mode = false;
 /** If confirmed packet, number or retries (Set with AT commands) */
@@ -17,16 +19,20 @@ uint8_t g_confirmed_retry = 0;
 /** Data rate  (Set with AT commands) */
 uint8_t g_data_rate = 3;
 
+/** Time interval to send packets in milliseconds */
+uint32_t g_send_repeat_time = 60000;
+
 /** Flag if transmit is active, used by some sensors */
 volatile bool tx_active = false;
 
 /** fPort to send packages */
 uint8_t set_fPort = 2;
 
-/** Payload buffer */
-uint8_t g_solution_data[64];
+/** LoRaWAN packet */
+WisCayenne g_solution_data(255);
 
-uint16_t my_fcount = 1;
+/** Relay status */
+uint8_t relay_status = LOW;
 
 /**
  * @brief Callback after join request cycle
@@ -35,11 +41,10 @@ uint16_t my_fcount = 1;
  */
 void joinCallback(int32_t status)
 {
+	// MYLOG("JOIN-CB", "Join result %d", status);
 	if (status != 0)
 	{
 		MYLOG("JOIN-CB", "LoRaWan OTAA - join fail! \r\n");
-		// To be checked if this makes sense
-		// api.lorawan.join();
 	}
 	else
 	{
@@ -62,6 +67,30 @@ void receiveCallback(SERVICE_LORA_RECEIVE_T *data)
 	}
 	Serial.print("\r\n");
 	tx_active = false;
+
+	// Check if it is a command received on fPort 10
+	if (data->Port == 10)
+	{
+		// Check for valid command sequence
+		if ((data->Buffer[0] == 0xAA) && (data->Buffer[1] == 0x55))
+		{
+			// Check for valid relay status request
+			if ((data->Buffer[2] >= 0) && (data->Buffer[2] < 2))
+			{
+				// Save the status and call the handler
+				relay_status = data->Buffer[2];
+				api.system.timer.start(RAK_TIMER_1, 100, NULL);
+			}
+			else
+			{
+				MYLOG("RX_CB", "Wrong command");
+			}
+		}
+		else
+		{
+			MYLOG("RX_CB", "Wrong format");
+		}
+	}
 }
 
 /**
@@ -102,6 +131,26 @@ void recv_cb(rui_lora_p2p_recv_t data)
 	}
 	Serial.print("\r\n");
 	tx_active = false;
+
+	// Check if it is a command with a valid command sequence
+	if ((data.Buffer[0] == 0xAA) && (data.Buffer[1] == 0x55))
+	{
+		// Check for valid relay status request
+		if ((data.Buffer[2] >= 0) && (data.Buffer[2] < 2))
+		{
+			// Save the status and call the handler
+			relay_status = data.Buffer[2];
+			api.system.timer.start(RAK_TIMER_1, 100, NULL);
+		}
+		else
+		{
+			MYLOG("RX-P2P-CB", "Wrong command");
+		}
+	}
+	else
+	{
+		MYLOG("RX-P2P-CB", "Wrong format");
+	}
 }
 
 /**
@@ -145,6 +194,9 @@ void setup()
 		api.lorawan.registerSendCallback(sendCallback);
 		api.lorawan.registerJoinCallback(joinCallback);
 		api.lorawan.registerLinkCheckCallback(linkcheckCallback);
+
+		// This application requires Class C to receive data at any time
+		api.lorawan.deviceClass.set(2);
 	}
 	else // Setup for LoRa P2P
 	{
@@ -159,7 +211,7 @@ void setup()
 	digitalWrite(LED_BLUE, HIGH);
 
 	pinMode(WB_IO2, OUTPUT);
-	digitalWrite(WB_IO2, LOW);
+	digitalWrite(WB_IO2, HIGH);
 
 	// Start Serial
 	Serial.begin(115200);
@@ -167,7 +219,7 @@ void setup()
 	// Delay for 5 seconds to give the chance for AT+BOOT
 	delay(5000);
 
-	api.system.firmwareVersion.set("RUI3-Low-Power-V1.0.0");
+	api.system.firmwareVersion.set("RUI3-Relay-V1.0.0");
 
 	Serial.println("RAKwireless RUI3 Node");
 	Serial.println("------------------------------------------------------");
@@ -203,12 +255,20 @@ void setup()
 		api.system.timer.start(RAK_TIMER_0, custom_parameters.send_interval, NULL);
 	}
 
+	// Create a timer to handle incoming packets
+	api.system.timer.create(RAK_TIMER_1, relay_handler, RAK_TIMER_ONESHOT);
+
+	// Initialize relay control port
+	pinMode(RELAY_IO, OUTPUT);
+	digitalWrite(RELAY_IO, relay_status);
+
 	// Check if it is LoRa P2P
 	if (api.lorawan.nwm.get() == 0)
 	{
 		digitalWrite(LED_BLUE, LOW);
 
-		sensor_handler(NULL);
+		// Force continous receive mode
+		api.lora.precv(65533);
 	}
 
 	if (api.lorawan.nwm.get() == 1)
@@ -230,7 +290,6 @@ void setup()
 	// Enable low power mode
 	api.system.lpm.set(1);
 
-	// If available, enable BLE advertising for 30 seconds and open the BLE UART channel
 #if defined(_VARIANT_RAK3172_) || defined(_VARIANT_RAK3172_SIP_)
 // No BLE
 #else
@@ -240,9 +299,17 @@ void setup()
 }
 
 /**
+ * @brief Set or reset the relay, depending on last received packet
+ * 
+ */
+void relay_handler(void *) {
+	MYLOG("DOWNLINK", "Set relay");
+	digitalWrite(RELAY_IO, relay_status);
+}
+
+/**
  * @brief sensor_handler is a timer function called every
- * custom_parameters.send_interval milliseconds. Default is 120000. Can be
- * changed with ATC+SENDINT command
+ * g_send_repeat_time milliseconds.
  *
  */
 void sensor_handler(void *)
@@ -251,7 +318,7 @@ void sensor_handler(void *)
 	digitalWrite(LED_BLUE, HIGH);
 
 	if (api.lorawan.nwm.get() == 1)
-	{
+	{ 
 		// Check if the node has joined the network
 		if (!api.lorawan.njs.get())
 		{
@@ -260,14 +327,29 @@ void sensor_handler(void *)
 		}
 	}
 
-	// Create payload (Cayenne LPP format for voltage)
-	g_solution_data[0] = 0x01;
-	g_solution_data[1] = 0x74;
-	g_solution_data[2] = 0x01;
-	g_solution_data[3] = 0x8c;
+	// Clear payload
+	g_solution_data.reset();
+
+	// Create payload
+	// Add battery voltage
+	g_solution_data.addVoltage(LPP_CHANNEL_BATT, api.system.bat.get());
+
+	g_solution_data.addPresence(LPP_CHANNEL_SWITCH, relay_status);
 
 	// Send the packet
 	send_packet();
+}
+
+/**
+ * @brief This example is complete timer
+ * driven. The loop() does nothing than
+ * sleep.
+ *
+ */
+void loop()
+{
+	api.system.sleep.all();
+	// api.system.scheduler.task.destroy();
 }
 
 /**
@@ -281,10 +363,8 @@ void send_packet(void)
 	// Check if it is LoRaWAN
 	if (api.lorawan.nwm.get() == 1)
 	{
-		MYLOG("UPLINK", "Sending packet # %d", my_fcount);
-		my_fcount++;
 		// Send the packet
-		if (api.lorawan.send(4, g_solution_data, set_fPort, g_confirmed_mode, g_confirmed_retry))
+		if (api.lorawan.send(g_solution_data.getSize(), g_solution_data.getBuffer(), set_fPort, g_confirmed_mode, g_confirmed_retry))
 		{
 			MYLOG("UPLINK", "Packet enqueued, size 4");
 			tx_active = true;
@@ -298,11 +378,11 @@ void send_packet(void)
 	// It is P2P
 	else
 	{
-		MYLOG("UPLINK", "Send packet with size 4 over P2P");
+		MYLOG("UPLINK", "Send packet over P2P");
 
 		digitalWrite(LED_BLUE, LOW);
 
-		if (api.lora.psend(4, g_solution_data, true))
+		if (api.lora.psend(g_solution_data.getSize(), g_solution_data.getBuffer(), true))
 		{
 			MYLOG("UPLINK", "Packet enqueued");
 		}
@@ -311,14 +391,4 @@ void send_packet(void)
 			MYLOG("UPLINK", "Send failed");
 		}
 	}
-}
-
-/**
- * @brief This example is complete timer driven.
- * The loop() does nothing than sleep.
- *
- */
-void loop()
-{
-	api.system.sleep.all();
 }
