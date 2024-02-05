@@ -30,10 +30,9 @@ Installation guides for Arduino IDE and Visual Studio Code can be found in the [
    - [LoRaP2P example](#lorawan-example)
 - [RUI3 event callbacks explained](#rui3-event-callbacks-explained)
 - [Using RUI3 timers](#using-rui3-timers)
-- [Serial Port Modes](#serial-port-modes)
-- [Write low power applications without calling sleep](#write-low-power-applications-without-calling-sleep)
 - [Wake up on external interrupts](#wake-up-on-external-interrupts)
-- [Use interrupt callbacks to get things done](#use-interrupt-callbacks-to-get-things-done)
+- [Building a low power application based on timers and events](#building-a-low-power-application-based-on-timers-and-events)
+
 
 ----
 
@@ -65,15 +64,15 @@ Setup output path in _**`.vscode/arduino.json`**_
 
 ### (4) Add version numbers to the generated flashable file
 With another setting in the _**`.vscode/arduino.json`**_ file you can add the firmware version to the file name and keep the latest generated firmware in a separate folder.    
-If you are using WisToolBox to flash your firmware, you can as create automatically the required ZIP file from your flashable file.
+If you are using WisToolBox to flash your firmware, you can as well create automatically the required ZIP file from your flashable file.
 
-Setup version number, project name and post-processing script _**`.vscode/arduino.json`**_    
+Setup version number, project name and post-processing script in _**`.vscode/arduino.json`**_    
 ![Post Processor](./assets/post-processing.png)
 
 Get the ready to use files in the _**generated**_ folder:
 ![Post Processor Result](./assets/post-processing-result.png)    
 
-An example for the post processing script is in the RUI3-Signal-Meter-P2P-LPWAN project ==> [rename.py](./RUI3-Signal-Meter-P2P-LPWAN-VSC/rename.py)    
+An example for the post processing script is in the RUI3-Sensor-Node-EPD-2.13-VSC project ==> [rename.py](./RUI3-Sensor-Node-EPD-2.13-VSC/rename.py)    
 
 ### (5) Use the VSC prediction and helper features when writing code    
 When starting to write a function call, VSC will help with a prediction of the possible function names:    
@@ -441,7 +440,7 @@ api.lora.precv(65533); // Start RX mode with the option to send a packet
 ----
 
 ## LoRaP2P example
-Putting the minimum set of API calls together for a LoRaWAN join request and try to join the network.
+Putting the minimum set of API calls together for a LoRa P2P node, ready to receive and send packets to another LoRa P2P node.
 
 ```cpp
 api.lora.nwm.set();
@@ -463,9 +462,9 @@ api.lora.send(sizeof(payload), payload, true);
 ----
 
 ## RUI3 event callbacks explained
-In RUI3 all LoRa/LoRaWAN functions (LoRaWAN/LoRa P2P RX, TX, LoRaWAN/LoRa P2P LoRaWAN join, LoRaWAN Linkcheck, LoRa P2P CAD result) are none-blocking. The API calls return to the application code immediately.    
+In RUI3 all LoRa/LoRaWAN functions (LoRaWAN/LoRa P2P RX, LoRaWAN/LoRa P2P TX, LoRaWAN join, LoRaWAN Linkcheck, LoRa P2P CAD result) are none-blocking. The API calls return to the application code immediately.    
 
-Success or failure of a function is reported with callbacks. RUI3 defines 4 callbacks for LoRaWAN and 3 callbacks for LoRa P2P. As these callbacks are initiated by low-level functions in the LoRa drivers/LoRaMAC stack. The callbacks should not perform long lasting code, doing so might disturb the proper work of the low-level functions.    
+Success or failure of a function is reported with callbacks. RUI3 defines 4 callbacks for LoRaWAN and 3 callbacks for LoRa P2P. As these callbacks are initiated by low-level functions in the LoRa drivers/LoRaMAC stack, the callbacks should not perform long lasting code, doing so might disturb the proper work of the low-level functions.    
 
 In my examples I am using a timer function to start a handler for the callback. Another option would be to set a flag and handle it in the loop(). But this method would require to have the loop running all the time and check for the flag. This would be not the best solution for a low power application.    
 
@@ -914,25 +913,194 @@ void setup(void)
 
 ----
 
-## Serial Port Modes
-
-[Back to Content](#content)
-
-----
-
-## Write low power applications without calling sleep
-
-[Back to Content](#content)
-
-----
-
 ## Wake up on external interrupts
+If external interrupts, e.g. from a accelerometer are used to wake up the RUI3 device, the interrupt handler should be kept small, similar to the LoRa/LoRaWAN callbacks.     
+Debug output should be complete avoided or kept to a minimum (better to complete avoid them!).    
+
+Assigning an external interrupt to an interrupt handler is done by using the `attachInterrupt()` call.    
+The interrupt handler itself has to be declared as `void handler(void)`.    
+Example for a simple interrupt handler for an acceleration sensor:
+```cpp
+volatile bool motion_detected = false;
+
+void int_callback_rak1904(void)
+{
+	motion_detected = true;
+	// Wake the handler and start location acquisition
+	api.system.timer.start(RAK_TIMER_2, 100, NULL);
+}
+
+void sensor_handler(void *)
+{
+	// Just for debug, show if the call is because of a motion detection
+	if (motion_detected)
+	{
+		Serial.println("ACC triggered IRQ");
+		motion_detected = false;
+
+		// Do something based on the motion detection
+		// .................
+	}
+
+	// If it was motion triggered, reset the ACC interrupts
+	clear_int_rak1904();
+}
+
+void setup(void)
+{
+	Serial.println("Create timer for interrupt handler");
+	// Create a timer
+	api.system.timer.create(RAK_TIMER_2, sensor_handler, RAK_TIMER_ONESHOT);
+	// Set the interrupt callback function
+	// MYLOG("ACC", "Int pin %s", acc_int_pin == WB_IO3 ? "WB_IO3" : "WB_IO5");
+	attachInterrupt(acc_int_pin, int_callback_rak1904, RISING);
+}
+```
+
+As you can see, same as for the LoRa/LoRaWAN events, the interrupt handler is only setting a flag and waking another function with a one shot timer call to handle the interrupt. This avoids to spend too much time inside the interrupt handler.    
+In this example, the interrupt handler is just setting a flag, then using a timer to call the `sensor_handler` where the motion event is handled.     
+
+The [RUI3-RAK13011-Alarm](./RUI3-RAK13011-Alarm) example is handling another interrupt scenario. This examples is using an external interrupt from a reed relay to react on opening/closing of a door or a window and sending the status over LoRaWAN. Sending a packet over LoRaWAN can take several seconds, while the opening/closing interrupts can come much more frequent.    
+To avoid loosing open/close events, the example is using a queue to store the events, while the events are sent one by one over LoRaWAN.    
+In addition it implements a simple de-bounce of the reed relay contacts, using a timer for this as well.    
+
+The events are handled in the function `handle_rak13011`, which is directly started from the timer callback. However, if the handler is still busy (it will run until the event queue is empty), the call to the handler is omitted and the event is pulled from the queue at a later time.
+
+Switch interrupt and debouncing code:     
+```cpp
+volatile int switch_status = 0;
+
+volatile bool handler_available = true;
+
+void switch_int_handler(void)
+{
+	MYLOG("REED", "Interrupt, start bounce check");
+	switch_status = digitalRead(SW_INT_PIN);
+	api.system.timer.start(RAK_TIMER_2, 50, NULL);
+}
+
+void switch_bounce_check(void *)
+{
+	MYLOG("REED", "Bounce check");
+	int new_switch_status = digitalRead(SW_INT_PIN);
+	if (new_switch_status != switch_status)
+	{
+		MYLOG("REED", "Bounce detected");
+		return;
+	}
+	if (switch_status == LOW)
+	{
+		// Push the new event into the queue
+		if (!Fifo.enQueue(false))
+		{
+			MYLOG("REED", "FiFo full");
+			return;
+		}
+	}
+	else
+	{
+		// Push the new event into the queue
+		if (!Fifo.enQueue(true))
+		{
+			MYLOG("REED", "FiFo full");
+			return;
+		}
+	}
+
+	MYLOG("REED", "Added event to queue");
+	// Check if the event handler is busy
+	if (handler_available)
+	{
+		// Handler is available, start processing the event
+		MYLOG("REED", "Start event handler");
+		handler_available = false;
+		handle_rak13011(NULL);
+	}
+}
+```
+
+The handler for the reed relay events is     
+(1) checking if there is an active LoRaWAN transmission with the flag tx_active. If there is no ongoing transmission, it pulls the last event from the event queue and starts the transmission. tx_active is set to true when the data is queued for sending and set to false from the LoRaWAN TX finished callback.    
+(2) checking whether the event queue is empty. If there are still events in the queue, it calls itself with a 5 seconds delay 
+
+This flow ensures that all events in the queue are handled one by one. The queue can store up to 50 events.
+```cpp
+void handle_rak13011(void *)
+{
+	if (!tx_active)
+	{
+		// Clear payload
+		g_solution_data.reset();
+
+		noInterrupts();
+		g_solution_data.addPresence(LPP_CHANNEL_SWITCH, !Fifo.deQueue() ? 0 : 1);
+		interrupts();
+
+		// Add battery voltage
+		g_solution_data.addVoltage(LPP_CHANNEL_BATT, api.system.bat.get());
+
+		// Send the packet
+		send_packet();
+	}
+	else
+	{
+		MYLOG("REED", "TX still active");
+	}
+
+	MYLOG("REED", "Queue entries = %d", Fifo.getSize());
+	if (!Fifo.isEmpty())
+	{
+		// Event queue is not empty. Trigger next packet in 5 seconds
+		api.system.timer.start(RAK_TIMER_3, 5000, NULL);
+	}
+	else
+	{
+		handler_available = true;
+		Serial.println("Queue is empty");
+	}
+}
+```
+
+The initialization function for the reed relay is creating the two required timers, one for the debouncing, one for calling the event handler. Then it is assigning the interrupt function to the GPIO.    
+```cpp
+bool init_rak13011(void)
+{
+	// Create a timers for handling the events
+	api.system.timer.create(RAK_TIMER_2, switch_bounce_check, RAK_TIMER_ONESHOT);
+	api.system.timer.create(RAK_TIMER_3, handle_rak13011, RAK_TIMER_ONESHOT);
+
+	MYLOG("REED", "Initialize Interrupt on pin %d", SW_INT_PIN);
+	pinMode(SW_INT_PIN, INPUT);
+	attachInterrupt(SW_INT_PIN, switch_int_handler, CHANGE);
+	MYLOG("REED", "Interrupt Initialized ");
+
+	return true;
+}
+```
 
 [Back to Content](#content)
 
 ----
 
-## Use interrupt callbacks to get things done
+## Building a low power application based on timers and events
+As mentioned in the introdcution, when starting with RUI3, I struggled with the missing features I know from FreeRTOS (tasks, semaphores, timers).    
+
+The method I finally implemented and use in all of my examples might not be the only one, but it works for me to get the RUI3 devices to lowest power consumption levels.    
+
+One problem often seen when writing custom code with RUI3 is that the **`loop()`** is used together with **`api.system.sleep.all(xxxxx)`** and is waiting for events to occur to handle them. This is IMHO not the best solution to achieve lowest power consumption and brings some timing problems, as when a LoRa or LoRaWAN packet is sent, the TX finished event will wake up the system and it will not go back to sleep.
+
+The examples in this repo are _**NOT**_ using the loop at all. Instead they are complete event driven. The WisDuo/WisBlock module is sleeping unless an event occurs. An event can be a timer callback or an external interrupt, or if using LoRaWAN Class C, it can be a packet received from the LoRaWAN server.
+
+The examples do setup a timer that wakes up the device in the desired send interval, send a packet and then the system goes back to sleep automatically.    
+As shown in these Tips & Tricks, this can be extended by external interrupts or other wake up sources.    
+
+The basic example for my implementation is the [RUI3-LowPower-Example](./RUI3-LowPower-Example).     
+
+It is split into 3 parts.    
+- LoRa callbacks, triggered by LoRaWAN and P2P events
+- Sensor handler, triggered by a recuring timer. Including the function to send a data packet
+- Loop, which is empty beside of putting the device to sleep
+
 
 [Back to Content](#content)
 
