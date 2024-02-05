@@ -1,4 +1,4 @@
-| <img src="./assets/RAK-Whirls.png" alt="RAKWireless"> | <img src="./assets/RUI3.jpg" alt="RUI3" width=30%> | <img src="./assets/rakstar.jpg" alt="RAKstar" > |    
+| <img src="../assets/RAK-Whirls.png" alt="RAKWireless"> | <img src="../assets/RUI3.jpg" alt="RUI3" width=30%> | <img src="../assets/rakstar.jpg" alt="RAKstar" > |    
 | :-: | :-: | :-: |     
 
 # Example how control a relay with downlinks with RUI3
