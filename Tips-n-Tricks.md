@@ -3,16 +3,16 @@
 
 # Tips and Tricks when using RUI3
 
+#### About this tips and tricks:    
+When starting to write applications with RUI3, there are a few things that are not obvious to new users or developers coming from other platforms. RUI3 has some mighty features that makes it easy to write applications for LoRaWAN or LoRa P2P end nodes, but it is missing some "comfort" features that other BSP's with FreeRTOS based environments are giving.    
+
+But what makes RUI3 easy to use for LoRaWAN and LoRa P2P end nodes, is that the complete handling of the communication is already integrated and sending and receiving data, connecting to LoRaWAN servers is possible with a few API functions and the callbacks that RUI3 provides.    
+
 #### Background:    
 I am writing CoP's and applications since 2014 using the Arduino IDE. The BSP's of the MCU's I am used to are all based on the FreeRTOS multitasking operating system.    
 So I got pampered with the comfort of tasks, timers, semaphores and queues to handle the workflow in my applications.    
 
-#### About this tips and tricks:    
-When starting to write applications with RUI3, there are a few things that are not obvious to new users or developers coming from other platforms. RUI3 has some mighty features that makes it easy to write applications for LoRaWAN or LoRa P2P end nodes, but it is missing some "comfort" features that FreeRTOS based environments are giving.    
-
-There are no tasks, no semaphores, no queues, so there is some re-thinking required.    
-
-But what makes RUI3 easy to use for LoRaWAN and LoRa P2P end nodes, is that the complete handling of both is already integrated and sending and receiving data, connecting to LoRaWAN servers is possible with a few API functions and the callbacks that RUI3 provides.    
+In RUI3 there are no tasks, no semaphores, no queues, so there is some re-thinking required.    
 
 With the _**RUI3 Best Practice**_ examples I want to share how I am using RUI3. And this _**Tips and Tricks**_ is more insight of the hidden gems of RUI3 and how to utilize them in applications.    
 

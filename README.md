@@ -104,7 +104,14 @@ The original libray is licensed under the [GNU LESSER GENERAL PUBLIC LICENSE Ver
 This is a PoC of a simple LoRa Mesh Network. It includes everything to setup a Mesh Network (compatible with [WisBlock-API-Mesh](https://github.com/beegee-tokyo/WisBlock-API-Mesh)).    
 It supports a limited number of Mesh nodes (15 with the RAK3172 and 30 with the RAK4630 and RAK11720) and sends a dummy data packet.    
 Beside of packet broadcasting it supports sending data to a specific other node and it is as well possible to define a master node to which all other nodes are sending the packets.    
- 
+
+## [RUI3-WisBlock-Kit-1](./RUI3-WisBlock-Kit-1)
+RUI3 code example for the [WisBlock Kit 1](https://store.rakwireless.com/products/wisblock-kit-1-weather-monitor) which includes RAK1901 (temperature and humidity), RAK1902 (barometric pressure) and RAK1903 (light) sensor support. Ideal if the Kit 1 is changed to use RUI3 for lower the power consumption, specially if the RAK4631 is replaced with a RAK3372 WisBlock Core Module (RAK3172).    
+
+## [RUI3-WisBlock-Kit-4](./RUI3-WisBlock-Kit-4)
+RUI3 code example for the [WisBlock Kit 4](https://store.rakwireless.com/products/wisblock-kit-4-air-quality-monitor) which uses the RAK1906 (temperature, humidity and barometric pressure) sensor. Ideal if the Kit 4 is changed to use RUI3 for lower the power consumption, specially if the RAK4631 is replaced with a RAK3372 WisBlock Core Module (RAK3172).    
+
+
 ----
 
 # Get RUI3 devices

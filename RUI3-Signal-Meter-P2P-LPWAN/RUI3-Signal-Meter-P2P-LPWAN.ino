@@ -640,7 +640,7 @@ void set_linkcheck(void)
 	api.lorawan.registerLinkCheckCallback(linkcheck_cb_lpw);
 	// Set unconfirmed packet mode
 	api.lorawan.cfm.set(false);
-	// Disable LinkCheck
+	// Enable LinkCheck
 	api.lorawan.linkcheck.set(2);
 	if (!api.lorawan.join(1, 1, 10, 50))
 	{
