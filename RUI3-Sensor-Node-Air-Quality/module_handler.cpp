@@ -33,7 +33,7 @@ void find_modules(void)
 		error = Wire.endTransmission();
 		if (error == 0)
 		{
-			// MYLOG("SCAN", "Found sensor on I2C1 0x%02X\n", address);
+			MYLOG("SCAN", "Found sensor on I2C1 0x%02X\n", address);
 			switch (address)
 			{
 			case 0x76:

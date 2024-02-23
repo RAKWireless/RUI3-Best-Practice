@@ -151,9 +151,9 @@ void setup()
 }
 
 /**
- * @brief Power up sensors and wait 30 seconds before 
+ * @brief Power up sensors and wait 30 seconds before
  * reading their values
- * 
+ *
  */
 void start_sensors(void *)
 {
@@ -165,9 +165,12 @@ void start_sensors(void *)
 	digitalWrite(WB_IO2, HIGH);
 	delay(500);
 	Wire.begin();
+	delay(500);
 
-	start_rak12037();
-
+	if (has_rak12037)
+	{
+		start_rak12037();
+	}
 	api.system.timer.start(RAK_TIMER_2, 30000, NULL);
 }
 
