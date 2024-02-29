@@ -35,6 +35,7 @@
 // Globals
 extern char g_dev_name[];
 extern bool g_has_rak15001;
+extern volatile bool sensor_heatup_finished;
 
 /** Custom flash parameters structure */
 struct custom_param_s

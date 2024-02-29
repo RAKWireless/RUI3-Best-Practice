@@ -13,15 +13,6 @@
 // Enable/Disable gas resistance measurements 0 = off, 1 = on
 #define USE_GAS 0
 
-/** Last temperature read */
-float _last_bme_temp = 0;
-/** Last humidity read */
-float _last_bme_humid = 0;
-/** Flag if values were read already (used by RAK12047 VOC sensor) */
-bool _has_last_bme_values = false;
-/** Counter to discard saved values after some time */
-uint8_t t_h_discard_counter = 0;
-
 #if defined(_VARIANT_RAK3172_) || defined(_VARIANT_RAK3172_SIP_)
 
 // Smaller library used for RAK3172 versions to reduce code size
@@ -105,9 +96,9 @@ bool read_rak1906()
 #endif
 #endif
 
-	_last_bme_temp = bme.humidity();
-	_last_bme_humid = bme.temperature();
-	_has_last_bme_values = true;
+	g_last_humid = bme.humidity();
+	g_last_temp = bme.temperature();
+	g_has_last_values = true;
 
 	return true;
 }
@@ -120,17 +111,17 @@ bool read_rak1906()
  */
 void get_rak1906_values(float *values)
 {
-	if (_has_last_bme_values)
+	if (g_has_last_values)
 	{
 		// Discard old values after 10 VOC readings
 		t_h_discard_counter++;
 		if (t_h_discard_counter == 9)
 		{
 			t_h_discard_counter = 0;
-			_has_last_bme_values = false;
+			g_has_last_values = false;
 		}
-		values[0] = _last_bme_temp;
-		values[1] = _last_bme_humid;
+		values[0] = g_last_temp;
+		values[1] = g_last_humid;
 		return;
 	}
 	else
@@ -138,8 +129,8 @@ void get_rak1906_values(float *values)
 		// start_rak1906();
 		// delay(100);
 		read_rak1906();
-		values[0] = _last_bme_temp;
-		values[1] = _last_bme_humid;
+		values[0] = g_last_temp;
+		values[1] = g_last_humid;
 	}
 	return;
 }

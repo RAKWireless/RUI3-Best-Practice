@@ -19,7 +19,9 @@ void get_sensor_values(void);
 // Forward declarations
 void sensor_handler(void *);
 void start_sensors(void *);
+void read_send_sensors(void);
 
+extern bool has_rak1901;
 extern bool has_rak1906;
 extern bool has_rak12037;
 extern bool has_rak12047;
@@ -28,8 +30,8 @@ extern bool has_rak12047;
 #include "wisblock_cayenne.h"
 // Cayenne LPP Channel numbers per sensor value
 #define LPP_CHANNEL_BATT 1 // Base Board
-// #define LPP_CHANNEL_HUMID 2			   // RAK1901
-// #define LPP_CHANNEL_TEMP 3			   // RAK1901
+#define LPP_CHANNEL_HUMID 2			   // RAK1901
+#define LPP_CHANNEL_TEMP 3			   // RAK1901
 // #define LPP_CHANNEL_PRESS 4			   // RAK1902
 // #define LPP_CHANNEL_LIGHT 5			   // RAK1903
 #define LPP_CHANNEL_HUMID_2 6 // RAK1906
@@ -70,6 +72,9 @@ extern bool has_rak12047;
 extern WisCayenne g_solution_data;
 
 // Sensor functions
+bool init_rak1901(void);
+void read_rak1901(void);
+void get_rak1901_values(float *values);
 bool init_rak1906(void);
 void start_rak1906(void);
 bool read_rak1906(void);
@@ -81,9 +86,9 @@ void get_rak12037_values(float *values);
 bool init_rak12047(void);
 void get_rak12047_value(void);
 extern volatile bool sensor_reading_active;
-extern float _last_bme_temp;
-extern float _last_bme_humid;
-extern bool _has_last_bme_values;
+extern float g_last_temp;
+extern float g_last_humid;
+extern bool g_has_last_values;
 extern uint8_t t_h_discard_counter;
 
 // Custom AT commands

@@ -256,7 +256,7 @@ int status_handler(SERIAL_PORT port, char *cmd, stParam *param)
 						  key_eui[4], key_eui[5], key_eui[6], key_eui[7],
 						  key_eui[8], key_eui[9], key_eui[10], key_eui[11],
 						  key_eui[12], key_eui[13], key_eui[14], key_eui[15]);
-				api.lorawan.daddr.set(key_eui, 4);
+				api.lorawan.daddr.get(key_eui, 4);
 				AT_PRINTF("DevAddr=%02X%02X%02X%02X",
 						  key_eui[0], key_eui[1], key_eui[2], key_eui[3]);
 			}

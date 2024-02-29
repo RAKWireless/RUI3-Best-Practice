@@ -12,6 +12,7 @@
 #include "app.h"
 #include "module_handler.h"
 
+bool has_rak1901 = false;
 bool has_rak1906 = false;
 bool has_rak12037 = false;
 bool has_rak12047 = false;
@@ -36,6 +37,9 @@ void find_modules(void)
 			MYLOG("SCAN", "Found sensor on I2C1 0x%02X\n", address);
 			switch (address)
 			{
+			case 0x70:
+				has_rak1901 = true;
+				break;
 			case 0x76:
 				has_rak1906 = true;
 				break;
@@ -49,15 +53,15 @@ void find_modules(void)
 		}
 	}
 
-	if (has_rak1906)
+	if (has_rak1901)
 	{
-		if (init_rak1906())
+		if (init_rak1901())
 		{
 			sprintf(g_dev_name, "RUI3 Env Sensor");
 		}
 		else
 		{
-			has_rak1906 = false;
+			has_rak1901 = false;
 		}
 	}
 
@@ -97,6 +101,13 @@ void find_modules(void)
  */
 void announce_modules(void)
 {
+	if (has_rak1901)
+	{
+		Serial.println("+EVT:RAK1901");
+		// Reading sensor data
+		read_rak1901();
+	}
+
 	if (has_rak1906)
 	{
 		Serial.println("+EVT:RAK1906");
@@ -125,10 +136,10 @@ void announce_modules(void)
  */
 void get_sensor_values(void)
 {
-	if (has_rak1906)
+	if (has_rak1901)
 	{
 		// Reading sensor data
-		read_rak1906();
+		read_rak1901();
 	}
 
 	if (has_rak12037)

@@ -36,6 +36,15 @@ uint16_t discard_counter = 0;
 
 volatile bool sensor_reading_active = false;
 
+/** Flag if values were read already (set by RAK1901 or RAK1906) */
+bool g_has_last_values = false;
+/** Last temperature read */
+float g_last_temp = 0;
+/** Last humidity read */
+float g_last_humid = 0;
+/** Counter to discard saved values after some time */
+uint8_t t_h_discard_counter = 0;
+
 // Forward declaration
 void do_read_rak12047(void *);
 
@@ -146,19 +155,31 @@ void do_read_rak12047(void *)
 	digitalWrite(LED_BLUE, HIGH);
 #endif
 
-	if (!sensor_reading_active)
-	{
-		// Power up sensors
-		digitalWrite(WB_IO2, HIGH);
-		delay(500);
-		Wire.begin();
-	}
+	// If sensor heatup phase is not active, power up sensor
+	// if (!sensor_reading_active)
+	// {
+	// 	// Power up sensors
+	// 	digitalWrite(WB_IO2, HIGH);
+	// 	delay(500);
+	// 	Wire.begin();
+	// }
 	uint16_t error;
 	uint16_t srawVoc = 0;
 	uint16_t defaultRh = 0x8000; // %RH
 	uint16_t defaultT = 0x6666;	 // degreeC
 	float t_h_values[2] = {0.0};
 
+	if (has_rak1901)
+	{
+		get_rak1901_values(t_h_values);
+		// MYLOG("VOC", "Rh: %.2f T: %.2f", humidity, temperature);
+
+		if ((t_h_values[0] != 0.0) && (t_h_values[1] != 0.0))
+		{
+			defaultRh = (uint16_t)(t_h_values[0] * 65535 / 100);
+			defaultT = (uint16_t)((t_h_values[1] + 45) * 65535 / 175);
+		}
+	}
 	if (has_rak1906)
 	{
 		get_rak1906_values(t_h_values);
@@ -191,8 +212,8 @@ void do_read_rak12047(void *)
 	// 3. Process raw signals by Gas Index Algorithm to get the VOC index values
 	if (error)
 	{
-		// errorToString(error, errorMessage, 256);
-		// MYLOG("VOC", "SGP40 - Error trying to execute measureRawSignals(): %s", errorMessage);
+		errorToString(error, errorMessage, 256);
+		MYLOG("VOC", "SGP40 - Error trying to execute measureRawSignals(): %s", errorMessage);
 	}
 	else
 	{
@@ -218,12 +239,38 @@ void do_read_rak12047(void *)
 		voc_valid = true;
 	}
 
-	if (!sensor_reading_active)
+	// Make sure heater is off
+	uint16_t success = 0xFFFF;
+	
+	for (int retry = 0; retry < 5; retry++)
 	{
-		Wire.end();
-		// Power down sensors
-		digitalWrite(WB_IO2, LOW);
+		success = sgp40.turnHeaterOff();
+		if (success == 0)
+		{
+			MYLOG("VOC", "RAK12047 Heater off %d", retry);
+			break;
+		}
+		delay(100);
 	}
+	if (success != 0)
+	{
+		MYLOG("VOC", "RAK12047 Heater off failed");
+	}
+
+	// Check if sensor heatup is finished
+	if (sensor_heatup_finished)
+	{
+		sensor_heatup_finished = false;
+		read_send_sensors();
+	}
+
+	// If no active sensor readings, shut down sensor power
+	// if (!sensor_reading_active)
+	// {
+	// 	Wire.end();
+	// 	// Power down sensors
+	// 	digitalWrite(WB_IO2, LOW);
+	// }
 #if MY_DEBUG > 0
 	digitalWrite(LED_BLUE, LOW);
 #endif

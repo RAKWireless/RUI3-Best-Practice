@@ -26,6 +26,8 @@ uint8_t g_confirmed_retry = 0;
 /** Data rate  (Set with AT commands) */
 uint8_t g_data_rate = 3;
 
+volatile bool sensor_heatup_finished = false;
+
 /**
  * @brief Callback after packet was received
  *
@@ -120,6 +122,7 @@ void setup()
 	// Add custom status AT command
 	init_status_at();
 
+	api.system.firmwareVer.set("RUI3-AQI");
 	MYLOG("SETUP", "RAKwireless %s Node", g_dev_name);
 	MYLOG("SETUP", "Setup the device with AT commands first");
 
@@ -147,7 +150,7 @@ void setup()
 	announce_modules();
 
 	// Power down the sensors
-	digitalWrite(WB_IO2, LOW);
+	// digitalWrite(WB_IO2, LOW);
 }
 
 /**
@@ -162,25 +165,41 @@ void start_sensors(void *)
 
 	MYLOG("SENS", "Powerup Sensors");
 
-	digitalWrite(WB_IO2, HIGH);
-	delay(500);
-	Wire.begin();
-	delay(500);
+	// digitalWrite(WB_IO2, HIGH);
+	// delay(500);
+	// Wire.begin();
+	// delay(500);
 
 	if (has_rak12037)
 	{
 		start_rak12037();
+		api.system.timer.start(RAK_TIMER_2, 30000, NULL);
 	}
-	api.system.timer.start(RAK_TIMER_2, 30000, NULL);
+	else
+	{
+		api.system.timer.start(RAK_TIMER_2, 5000, NULL);
+	}
 }
 
 /**
- * @brief sensor_handler is a timer function called every
- * g_custom_parameters.send_interval milliseconds. Default is 120000. Can be
- * changed with ATC+SENDINT
+ * @brief sensor_handler is a timer function called after the 
+ * sensor heatup phase is finished.
+ * It sets a flag and the sensor data is read and send with the
+ * next VOC send cycle, which happening every 30 seconds
  *
  */
 void sensor_handler(void *)
+{
+	sensor_heatup_finished = true;
+	return;
+}
+
+/**
+ * @brief Called if VOC reading and sensor heatup phase is finished.
+ * Reads the sensors, prepares the payload and send the data.
+ * 
+ */
+void read_send_sensors(void)
 {
 	// MYLOG("SENS", "Start");
 	digitalWrite(LED_BLUE, HIGH);
@@ -198,12 +217,9 @@ void sensor_handler(void *)
 	// Read sensor data
 	get_sensor_values();
 
-	Wire.end();
-	// Power down sensors
-	digitalWrite(WB_IO2, LOW);
-
-	// Reset flag for RAK12047 readings
-	sensor_reading_active = false;
+	// Wire.end();
+	// // Power down sensors
+	// digitalWrite(WB_IO2, LOW);
 
 	// Add battery voltage
 	g_solution_data.addVoltage(LPP_CHANNEL_BATT, api.system.bat.get());
@@ -219,6 +235,9 @@ void sensor_handler(void *)
 	{
 		MYLOG("UPL", "Send fail");
 	}
+
+	// Reset flag for RAK12047 readings
+	sensor_reading_active = false;
 }
 
 /**

@@ -15,22 +15,16 @@
 SCD30 scd30;
 
 /**
- * @brief Initialize MQ2 gas sensor
+ * @brief Initialize CO2 gas sensor
  *
  * @return true success
  * @return false failed
  */
 bool init_rak12037(void)
 {
-	// Enable power
-	pinMode(WB_IO2, OUTPUT);
-	// digitalWrite(WB_IO2, HIGH); // power on RAK12037
-
-	Wire.begin();
 	if (!scd30.begin(Wire))
 	{
 		// MYLOG("SCD30", "SCD30 not found");
-		// digitalWrite(WB_IO2, LOW); // power down RAK12037
 		return false;
 	}
 
@@ -87,20 +81,31 @@ void read_rak12037(void)
 	MYLOG("SCD30", "Humidity %.2f", humid_reading);
 
 	g_solution_data.addConcentration(LPP_CHANNEL_CO2_2, co2_reading);
-	// Add temperature and humidity only if no RAK1906 is available
-	if (!has_rak1906)
+	// Add temperature and humidity only if no RAK1906 and no RAK1901 is available
+	if ((!has_rak1906) && (!has_rak1901))
 	{
 		g_solution_data.addTemperature(LPP_CHANNEL_CO2_Temp_2, temp_reading);
 		g_solution_data.addRelativeHumidity(LPP_CHANNEL_CO2_HUMID_2, humid_reading);
 	}
 	else
 	{
-		_last_bme_temp = temp_reading;
-		_last_bme_humid = humid_reading;
-		_has_last_bme_values = true;
+		g_last_temp = temp_reading;
+		g_last_humid = humid_reading;
+		g_has_last_values = true;
 	}
 	// Stop the measurements
-	scd30.StopMeasurement();
+	scd30.readMeasurement();
+	time_t start_timeout = millis();
+	while ((millis() - start_timeout) < 3000)
+	{
+		if (scd30.StopMeasurement())
+		{
+			MYLOG("CO2", "RAK12037 stopped");
+			return;
+		}
+		delay(250);
+	}
+	MYLOG("CO2", "Stop RAK12037 failed");
 }
 
 /**
@@ -111,17 +116,17 @@ void read_rak12037(void)
  */
 void get_rak12037_values(float *values)
 {
-	if (_has_last_bme_values)
+	if (g_has_last_values)
 	{
 		// Discard old values after 10 VOC readings
 		t_h_discard_counter++;
 		if (t_h_discard_counter == 9)
 		{
 			t_h_discard_counter = 0;
-			_has_last_bme_values = false;
+			g_has_last_values = false;
 		}
-		values[0] = _last_bme_temp;
-		values[1] = _last_bme_humid;
+		values[0] = g_last_temp;
+		values[1] = g_last_humid;
 		return;
 	}
 	else
