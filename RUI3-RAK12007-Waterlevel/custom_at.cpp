@@ -38,6 +38,7 @@ custom_param_s g_custom_parameters;
 int interval_send_handler(SERIAL_PORT port, char *cmd, stParam *param);
 int status_handler(SERIAL_PORT port, char *cmd, stParam *param);
 int tank_depth_handler(SERIAL_PORT port, char *cmd, stParam *param);
+int node_id_handler(SERIAL_PORT port, char *cmd, stParam *param);
 
 /**
  * @brief Add send interval AT command
@@ -95,6 +96,66 @@ int interval_send_handler(SERIAL_PORT port, char *cmd, stParam *param)
 			// Restart the timer
 			api.system.timer.start(RAK_TIMER_0, g_custom_parameters.send_interval, NULL);
 		}
+		// Save custom settings
+		save_at_setting();
+	}
+	else
+	{
+		return AT_PARAM_ERROR;
+	}
+
+	return AT_OK;
+}
+
+/**
+ * @brief Add send interval AT command
+ *
+ * @return true if success
+ * @return false if failed
+ */
+bool init_node_id_at(void)
+{
+	return api.system.atMode.add((char *)"NODE_ID",
+								 (char *)"Set/Get the node ID",
+								 (char *)"NODE_ID", node_id_handler,
+								 RAK_ATCMD_PERM_WRITE | RAK_ATCMD_PERM_READ);
+}
+
+/**
+ * @brief Handler for node ID AT commands
+ *
+ * @param port Serial port used
+ * @param cmd char array with the received AT command
+ * @param param char array with the received AT command parameters
+ * @return int result of command parsing
+ * 			AT_OK AT command & parameters valid
+ * 			AT_PARAM_ERROR command or parameters invalid
+ */
+int node_id_handler(SERIAL_PORT port, char *cmd, stParam *param)
+{
+	if (param->argc == 1 && !strcmp(param->argv[0], "?"))
+	{
+		AT_PRINTF("%s=%08X", cmd, g_custom_parameters.node_id);
+	}
+	else if (param->argc == 1)
+	{
+		MYLOG("AT_CMD", "param->argv[0] >> %s", param->argv[0]);
+		for (int i = 0; i < strlen(param->argv[0]); i++)
+		{
+			if (!isdigit(*(param->argv[0] + i)))
+			{
+				MYLOG("AT_CMD", "%d is no digit", i);
+				return AT_PARAM_ERROR;
+			}
+		}
+
+		uint32_t new_node_id = strtoul(param->argv[0], NULL, 10);
+
+		MYLOG("AT_CMD", "Requested node ID %08X", new_node_id);
+
+		g_custom_parameters.node_id = new_node_id;
+
+		MYLOG("AT_CMD", "New node ID %08X", g_custom_parameters.node_id);
 		// Save custom settings
 		save_at_setting();
 	}
@@ -294,6 +355,7 @@ bool get_at_setting(void)
 		MYLOG("AT_CMD", "No valid send interval found, set to default, read 0X%08X", temp_params.send_interval);
 		g_custom_parameters.send_interval = 0;
 		g_custom_parameters.tank_depth_mm = 1100;
+		g_custom_parameters.node_id = 0x00;
 		save_at_setting();
 		return false;
 	}
@@ -302,6 +364,9 @@ bool get_at_setting(void)
 
 	MYLOG("AT_CMD", "Read tank depth %dmm", temp_params.tank_depth_mm);
 	g_custom_parameters.tank_depth_mm = temp_params.tank_depth_mm;
+
+	MYLOG("AT_CMD", "Read node ID %08X", temp_params.node_id);
+	g_custom_parameters.node_id = temp_params.node_id;
 
 	return true;
 }
@@ -320,6 +385,7 @@ bool save_at_setting(void)
 	MYLOG("AT_CMD", "Writing flag: %02X", g_custom_parameters.valid_flag);
 	MYLOG("AT_CMD", "Writing send interval 0X%08X ", g_custom_parameters.send_interval);
 	MYLOG("AT_CMD", "Writing tank depth %d ", g_custom_parameters.tank_depth_mm);
+	MYLOG("AT_CMD", "Writing node id %08X ", g_custom_parameters.node_id);
 	wr_result = api.system.flash.set(0, flash_value, sizeof(custom_param_s));
 	if (!wr_result)
 	{

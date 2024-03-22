@@ -59,6 +59,9 @@ bool init_gnss(void)
 		MYLOG("GNSS", "Could not initialize RAK12500 on Wire");
 		return false;
 	}
+
+	MYLOG("GNSS", "Found RAK12500 on Wire");
+
 	my_gnss.setI2COutput(COM_TYPE_UBX); // Set the I2C port to output UBX only (turn off NMEA noise)
 
 	my_gnss.saveConfiguration(); // Save the current settings to flash and BBR
@@ -123,6 +126,7 @@ bool poll_gnss(void)
 	int32_t altitude = 0;
 	int16_t accuracy = 0;
 	uint8_t satellites = 0;
+	uint32_t unix_time = 0;
 
 	bool has_pos = false;
 	bool has_alt = false;
@@ -154,7 +158,7 @@ bool poll_gnss(void)
 			altitude = my_gnss.getAltitude();
 			accuracy = my_gnss.getHorizontalDOP();
 			satellites = my_gnss.getSIV();
-
+			unix_time = my_gnss.getUnixEpoch();
 			// MYLOG("GNSS", "Fixtype: %d %s", my_gnss.getFixType(), fix_type_str);
 			// MYLOG("GNSS", "Lat: %.4f Lon: %.4f", latitude / 10000000.0, longitude / 10000000.0);
 			// MYLOG("GNSS", "Alt: %.2f", altitude / 1000.0);
@@ -173,6 +177,7 @@ bool poll_gnss(void)
 
 		// Add the location to the payload
 		g_solution_data.addGNSS_6(LPP_CHANNEL_GPS, latitude, longitude, altitude);
+		g_solution_data.addUnixTime(LPP_CHANNEL_TIME, unix_time);
 		return true;
 	}
 	else
@@ -188,6 +193,7 @@ bool poll_gnss(void)
 		satellites = 18;
 
 		g_solution_data.addGNSS_6(LPP_CHANNEL_GPS, latitude, longitude, altitude);
+		g_solution_data.addUnixTime(LPP_CHANNEL_TIME, millis() / 1000);
 		last_read_ok = true;
 		return true;
 #endif

@@ -150,7 +150,7 @@ void setup()
 	announce_modules();
 
 	// Power down the sensors
-	// digitalWrite(WB_IO2, LOW);
+	digitalWrite(WB_IO2, LOW);
 }
 
 /**
@@ -165,10 +165,10 @@ void start_sensors(void *)
 
 	MYLOG("SENS", "Powerup Sensors");
 
-	// digitalWrite(WB_IO2, HIGH);
-	// delay(500);
-	// Wire.begin();
-	// delay(500);
+	digitalWrite(WB_IO2, HIGH);
+	delay(500);
+	Wire.begin();
+	delay(500);
 
 	if (has_rak12037)
 	{
@@ -182,7 +182,7 @@ void start_sensors(void *)
 }
 
 /**
- * @brief sensor_handler is a timer function called after the 
+ * @brief sensor_handler is a timer function called after the
  * sensor heatup phase is finished.
  * It sets a flag and the sensor data is read and send with the
  * next VOC send cycle, which happening every 30 seconds
@@ -191,13 +191,18 @@ void start_sensors(void *)
 void sensor_handler(void *)
 {
 	sensor_heatup_finished = true;
+
+	if (!has_rak12047)
+	{
+		read_send_sensors();
+	}
 	return;
 }
 
 /**
  * @brief Called if VOC reading and sensor heatup phase is finished.
  * Reads the sensors, prepares the payload and send the data.
- * 
+ *
  */
 void read_send_sensors(void)
 {
@@ -217,10 +222,12 @@ void read_send_sensors(void)
 	// Read sensor data
 	get_sensor_values();
 
-	// Wire.end();
-	// // Power down sensors
-	// digitalWrite(WB_IO2, LOW);
-
+	if (!has_rak12047)
+	{
+		Wire.end();
+		// Power down sensors
+		digitalWrite(WB_IO2, LOW);
+	}
 	// Add battery voltage
 	g_solution_data.addVoltage(LPP_CHANNEL_BATT, api.system.bat.get());
 	// MYLOG("UPL", "Bat %.4f", api.system.bat.get());

@@ -108,13 +108,16 @@ struct custom_param_s
 	uint8_t valid_flag = 0xAA;
 	uint32_t send_interval = 0;
 	uint32_t tank_depth_mm = 1100;
+	uint32_t node_id = 0;
 };
 
 // Forward declarations
 void send_packet(void);
+void resend_packet(void *);
 bool init_status_at(void);
 bool init_interval_at(void);
 bool init_tank_depth_at(void);
+bool init_node_id_at(void);
 bool get_at_setting(void);
 bool save_at_setting(void);
 extern custom_param_s g_custom_parameters;

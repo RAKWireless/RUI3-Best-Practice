@@ -278,3 +278,37 @@ uint8_t WisCayenne::addVoc_index(uint8_t channel, uint32_t voc_index)
 
 	return _cursor;
 }
+
+union dev_id_u {
+	uint32_t id_32;
+	uint8_t id_array[4];
+};
+
+/**
+ * @brief Add device ID to payload
+ *
+ * @param channel LPP channel
+ * @param dev_id pointer to 4 byte long array with the device ID
+ * @return uint8_t bytes added to the data packet
+ */
+uint8_t WisCayenne::addDevID(uint8_t channel, uint32_t dev_id)
+{
+	// check buffer overflow
+	if ((_cursor + WB_DEV_ID_SIZE + 2) > _maxsize)
+	{
+		_error = LPP_ERROR_OVERFLOW;
+		return 0;
+	}
+	dev_id_u dev_id_union;
+	dev_id_union.id_32 = dev_id;
+
+	_buffer[_cursor++] = channel;
+	_buffer[_cursor++] = WB_DEV_ID;
+
+	_buffer[_cursor++] = dev_id_union.id_array[3];
+	_buffer[_cursor++] = dev_id_union.id_array[2];
+	_buffer[_cursor++] = dev_id_union.id_array[1];
+	_buffer[_cursor++] = dev_id_union.id_array[0];
+
+	return _cursor;
+}

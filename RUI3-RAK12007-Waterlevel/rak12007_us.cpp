@@ -100,8 +100,35 @@ bool read_rak12007(bool add_payload)
 		{
 			// Add level to the payload (in cm !)
 			g_solution_data.addAnalogInput(LPP_CHANNEL_WLEVEL, (float)(level / 10.0));
+#if MY_DEBUG == 1
+			MYLOG("PAYL", "After adding water level");
+			uint8_t *payload_temp = g_solution_data.getBuffer();
+			for (int i = 0; i < g_solution_data.getSize(); i++)
+			{
+				Serial.printf("%02X", payload_temp[i]);
+			}
+			Serial.print("\r\n");
+#endif
 			g_solution_data.addPresence(LPP_CHANNEL_WL_LOW, low_level);
+#if MY_DEBUG == 1
+			MYLOG("PAYL", "After adding low level");
+			payload_temp = g_solution_data.getBuffer();
+			for (int i = 0; i < g_solution_data.getSize(); i++)
+			{
+				Serial.printf("%02X", payload_temp[i]);
+			}
+			Serial.print("\r\n");
+#endif
 			g_solution_data.addPresence(LPP_CHANNEL_WL_HIGH, overflow);
+#if MY_DEBUG == 1
+			MYLOG("PAYL", "After adding overflow");
+			payload_temp = g_solution_data.getBuffer();
+			for (int i = 0; i < g_solution_data.getSize(); i++)
+			{
+				Serial.printf("%02X", payload_temp[i]);
+			}
+			Serial.print("\r\n");
+#endif
 		}
 		digitalWrite(PD, HIGH); // Power down the sensor
 		digitalWrite(TRIG, HIGH);

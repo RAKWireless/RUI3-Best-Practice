@@ -3,5 +3,5 @@
     "board": "rak_rui:stm32:WisDuoRAK3172EvaluationBoard",
     "output": "build",
     "sketch": "RUI3-RAK12007-Waterlevel.ino",
-    "port": "COM3"
+    "port": "COM7"
 }

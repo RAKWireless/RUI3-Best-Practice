@@ -27,6 +27,10 @@
 			Serial.printf("[%s] ", tag); \
 		Serial.printf(__VA_ARGS__);      \
 		Serial.printf("\n");             \
+		if (tag)                         \
+			Serial6.printf("[%s] ", tag); \
+		Serial6.printf(__VA_ARGS__);      \
+		Serial6.printf("\n");             \
 	} while (0);                         \
 	delay(100)
 #else
@@ -45,6 +49,7 @@ extern custom_param_s custom_parameters;
 // Cayenne LPP Channel numbers per sensor value
 #define LPP_CHANNEL_BATT 1 // Base Board
 #define LPP_CHANNEL_GPS 10 // RAK1910/RAK12500
+#define LPP_CHANNEL_TIME 10 // RAK1910/RAK12500
 
 // Forward declarations
 void sensor_handler(void *);

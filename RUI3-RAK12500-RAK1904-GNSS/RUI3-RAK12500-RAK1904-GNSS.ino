@@ -24,7 +24,7 @@ volatile bool tx_active = false;
 uint8_t set_fPort = 2;
 
 /** LoRaWAN packet */
-WisCayenne g_solution_data(128);
+WisCayenne g_solution_data(255);
 
 /** Counter for GNSS readings */
 uint16_t check_gnss_counter = 0;
@@ -327,8 +327,8 @@ void sensor_handler(void *)
 		// Startup GNSS module
 		init_gnss();
 		check_gnss_counter = 0;
-		// Max location aquisition time is half of minimal interval
-		check_gnss_max_try = custom_parameters.min_interval / 2 / 2500;
+		// Max location aquisition time is minimal interval // was half of min interval
+		check_gnss_max_try = custom_parameters.min_interval / 2500; // / 2 / 2500;
 		gnss_start = millis();
 		// Start the timer
 		api.system.timer.start(RAK_TIMER_1, 2500, NULL);

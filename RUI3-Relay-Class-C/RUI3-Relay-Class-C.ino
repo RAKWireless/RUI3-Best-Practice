@@ -50,6 +50,7 @@ void joinCallback(int32_t status)
 	{
 		MYLOG("JOIN-CB", "LoRaWan OTAA - joined! \r\n");
 		digitalWrite(LED_BLUE, LOW);
+		sensor_handler(NULL);
 	}
 }
 
@@ -78,7 +79,15 @@ void receiveCallback(SERVICE_LORA_RECEIVE_T *data)
 			if ((data->Buffer[2] >= 0) && (data->Buffer[2] < 2))
 			{
 				// Save the status and call the handler
-				relay_status = data->Buffer[2];
+				if (data->Buffer[2] == 0)
+				{
+					relay_status = LOW;
+				}
+				else
+				{
+					relay_status = HIGH;
+				}
+
 				api.system.timer.start(RAK_TIMER_1, 100, NULL);
 			}
 			else
@@ -260,7 +269,11 @@ void setup()
 
 	// Initialize relay control port
 	pinMode(RELAY_IO, OUTPUT);
-	digitalWrite(RELAY_IO, relay_status);
+	digitalWrite(RELAY_IO, LOW);
+	delay(500);
+	digitalWrite(RELAY_IO, HIGH);
+	delay(500);
+	digitalWrite(RELAY_IO, LOW);
 
 	// Check if it is LoRa P2P
 	if (api.lorawan.nwm.get() == 0)

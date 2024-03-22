@@ -156,13 +156,13 @@ void do_read_rak12047(void *)
 #endif
 
 	// If sensor heatup phase is not active, power up sensor
-	// if (!sensor_reading_active)
-	// {
-	// 	// Power up sensors
-	// 	digitalWrite(WB_IO2, HIGH);
-	// 	delay(500);
-	// 	Wire.begin();
-	// }
+	if (!sensor_reading_active)
+	{
+		// Power up sensors
+		digitalWrite(WB_IO2, HIGH);
+		delay(500);
+		Wire.begin();
+	}
 	uint16_t error;
 	uint16_t srawVoc = 0;
 	uint16_t defaultRh = 0x8000; // %RH
@@ -265,12 +265,12 @@ void do_read_rak12047(void *)
 	}
 
 	// If no active sensor readings, shut down sensor power
-	// if (!sensor_reading_active)
-	// {
-	// 	Wire.end();
-	// 	// Power down sensors
-	// 	digitalWrite(WB_IO2, LOW);
-	// }
+	if (!sensor_reading_active)
+	{
+		Wire.end();
+		// Power down sensors
+		digitalWrite(WB_IO2, LOW);
+	}
 #if MY_DEBUG > 0
 	digitalWrite(LED_BLUE, LOW);
 #endif

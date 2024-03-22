@@ -24,7 +24,16 @@ volatile bool tx_active = false;
 uint8_t set_fPort = 2;
 
 /** Payload buffer */
-WisCayenne g_solution_data(128);
+WisCayenne g_solution_data(255);
+
+/** Packet backup buffer in case TX fails */
+uint8_t packet_backup_buffer[256];
+
+/** Size of backup buffer */
+uint8_t packet_backup_len = 0;
+
+/** Flag is TX was retry */
+bool tx_retry = false;
 
 /**
  * @brief Callback after join request cycle
@@ -94,12 +103,21 @@ void sendCallback(int32_t status)
  */
 void recv_cb(rui_lora_p2p_recv_t data)
 {
-	MYLOG("RX-P2P-CB", "P2P RX, RSSI %d, SNR %d", data.Rssi, data.Snr);
-	for (int i = 0; i < data.BufferSize; i++)
+	if (data.Status != 0)
 	{
-		Serial.printf("%02X", data.Buffer[i]);
+		MYLOG("RX-P2P-CB", "P2P RX error %d", data.Status);
 	}
-	Serial.print("\r\n");
+	else
+	{
+		MYLOG("RX-P2P-CB", "P2P RX, RSSI %d, SNR %d", data.Rssi, data.Snr);
+#if MY_DEBUG == 1
+		for (int i = 0; i < data.BufferSize; i++)
+		{
+			Serial.printf("%02X", data.Buffer[i]);
+		}
+		Serial.print("\r\n");
+#endif
+	}
 	tx_active = false;
 }
 
@@ -122,6 +140,20 @@ void send_cb(void)
 void cad_cb(bool result)
 {
 	MYLOG("CAD-P2P-CB", "P2P CAD reports %s", result ? "activity" : "no activity");
+
+	if (result)
+	{
+		if (tx_retry == true)
+		{
+			// If CAD reports 2 times channel activity, give up
+			MYLOG("CAD-P2P-CB", "P2P CAD failed twice");
+			tx_retry = false;
+			return;
+		}
+		// Start timer to resend the packet in 5 seconds
+		tx_retry = true;
+		api.system.timer.start(RAK_TIMER_1, 2000, NULL);
+	}
 }
 
 /**
@@ -166,7 +198,7 @@ void setup()
 	// Delay for 5 seconds to give the chance for AT+BOOT
 	delay(5000);
 
-	api.system.firmwareVersion.set("RUI3-Water-Level-V1.0.0");
+	api.system.firmwareVersion.set("RUI3-Water-Level-V1.0.1");
 
 	Serial.println("RAKwireless RUI3 Water level sensor");
 	Serial.println("------------------------------------------------------");
@@ -198,7 +230,13 @@ void setup()
 		MYLOG("SETUP", "Add custom AT command Tank Depth fail");
 	}
 
-	// Get saved sending interval from flash
+	// Register the custom AT command to set the node ID
+	if (!init_node_id_at())
+	{
+		MYLOG("SETUP", "Add custom AT command Node ID fail");
+	}
+
+	// Get saved sending user settings from flash
 	get_at_setting();
 
 	digitalWrite(LED_GREEN, LOW);
@@ -210,6 +248,7 @@ void setup()
 		// Start a timer.
 		api.system.timer.start(RAK_TIMER_0, g_custom_parameters.send_interval, NULL);
 	}
+	api.system.timer.create(RAK_TIMER_1, resend_packet, RAK_TIMER_ONESHOT);
 
 	// Check if it is LoRa P2P
 	if (api.lorawan.nwm.get() == 0)
@@ -286,6 +325,15 @@ void sensor_handler(void *)
 
 	g_solution_data.addVoltage(LPP_CHANNEL_BATT, batt_lvl);
 
+#if MY_DEBUG == 1
+	MYLOG("PAYL", "After adding battery");
+	uint8_t *payload_temp = g_solution_data.getBuffer();
+	for (int i = 0; i < g_solution_data.getSize(); i++)
+	{
+		Serial.printf("%02X", payload_temp[i]);
+	}
+	Serial.print("\r\n");
+#endif
 	// Get distance from US sensor
 	if (has_rak12007)
 	{
@@ -337,11 +385,41 @@ void send_packet(void)
 	// It is P2P
 	else
 	{
+		// Add the node ID to the payload
+		if (g_solution_data.addDevID(LPP_CHANNEL_DEVID, g_custom_parameters.node_id) == 0)
+		{
+			MYLOG("UPLINK", "Failed to add device id");
+		}
+#if MY_DEBUG == 1
+		MYLOG("PAYL", "After adding node ID");
+		uint8_t *payload_temp = g_solution_data.getBuffer();
+		for (int i = 0; i < g_solution_data.getSize(); i++)
+		{
+			Serial.printf("%02X", payload_temp[i]);
+		}
+		Serial.print("\r\n");
+#endif
+
+		// Create backup of packet
+		packet_backup_len = g_solution_data.getSize();
+		memset(packet_backup_buffer, 0, 256);
+		memcpy(packet_backup_buffer, g_solution_data.getBuffer(), packet_backup_len);
+
+		MYLOG("PARSE", "Sending payload:");
+#if MY_DEBUG == 1
+		for (int i = 0; i < packet_backup_len; i++)
+		{
+			Serial.printf("%02X", packet_backup_buffer[i]);
+		}
+		Serial.print("\r\n");
+#endif
+
 		MYLOG("UPLINK", "Send P2P packet with size %d", g_solution_data.getSize());
 
 		digitalWrite(LED_BLUE, LOW);
+		tx_retry = false;
 
-		if (api.lora.psend(g_solution_data.getSize(), g_solution_data.getBuffer(), true))
+		if (api.lora.psend(g_solution_data.getSize(), g_solution_data.getBuffer(), false))
 		{
 			MYLOG("UPLINK", "Packet enqueued");
 		}
@@ -349,5 +427,17 @@ void send_packet(void)
 		{
 			MYLOG("UPLINK", "Send failed");
 		}
+	}
+}
+
+void resend_packet(void *)
+{
+	if (api.lora.psend(packet_backup_len, packet_backup_buffer, true))
+	{
+		MYLOG("UPLINK", "Packet enqueued");
+	}
+	else
+	{
+		MYLOG("UPLINK", "Send failed");
 	}
 }
