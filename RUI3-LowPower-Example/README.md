@@ -90,7 +90,7 @@ First it checks whether the system is working in LoRaWAN mode or as a LoRa P2P m
 
 ```cpp
 	// Setup for LoRaWAN
-	if (api.lora.nwm.get() == 1)
+	if (api.lorawan.nwm.get() == 1)
 	{
 		// Setup the callbacks for joined and send finished
 		api.lorawan.registerRecvCallback(receiveCallback);
@@ -99,8 +99,8 @@ First it checks whether the system is working in LoRaWAN mode or as a LoRa P2P m
 	}
 	else // Setup for LoRa P2P
 	{
-		api.lora.registerPRecvCallback(recv_cb);
-		api.lora.registerPSendCallback(send_cb);
+		api.lorawan.registerPRecvCallback(recv_cb);
+		api.lorawan.registerPSendCallback(send_cb);
 	}
 ```
 
@@ -135,7 +135,7 @@ After the payload is ready, it calls **`send_packet`** to get the packet sent ou
 ```cpp
 void sensor_handler(void *)
 {
-	if (api.lora.nwm.get() == 1)
+	if (api.lorawan.nwm.get() == 1)
 	{ 
 		// Check if the node has joined the network
 		if (!api.lorawan.njs.get())
@@ -162,7 +162,7 @@ void sensor_handler(void *)
 void send_packet(void)
 {
 	// Check if it is LoRaWAN
-	if (api.lora.nwm.get() == 1)
+	if (api.lorawan.nwm.get() == 1)
 	{
 		// Send the packet
 		if (api.lorawan.send(4, g_solution_data, set_fPort, g_confirmed_mode, g_confirmed_retry))
@@ -178,7 +178,7 @@ void send_packet(void)
 	else
 	{
 		MYLOG("UPLINK", "Send packet with size 4 over P2P");
-		if (api.lora.psend(4, g_solution_data))
+		if (api.lorawan.psend(4, g_solution_data))
 		{
 			MYLOG("UPLINK", "Packet enqueued");
 		}

@@ -136,6 +136,12 @@ int test_mode_handler(SERIAL_PORT port, char *cmd, stParam *param)
 
 		MYLOG("AT_CMD", "Requested mode %ld", new_mode);
 
+		// On RUI3 V4.1.0 linkcheck is not implemented in the API.
+		if (new_mode == 0)
+		{
+			return AT_PARAM_ERROR;
+		}
+
 		if (new_mode > 2)
 		{
 			return AT_PARAM_ERROR;
@@ -246,15 +252,15 @@ int status_handler(SERIAL_PORT port, char *cmd, stParam *param)
 			{
 				AT_PRINTF("OTAA mode");
 				api.lorawan.deui.get(key_eui, 8);
-				AT_PRINTF("DevEUI = %02X%02X%02X%02X%02X%02X%02X%02X",
+				AT_PRINTF("DevEUI=%02X%02X%02X%02X%02X%02X%02X%02X",
 						  key_eui[0], key_eui[1], key_eui[2], key_eui[3],
 						  key_eui[4], key_eui[5], key_eui[6], key_eui[7]);
 				api.lorawan.appeui.get(key_eui, 8);
-				AT_PRINTF("AppEUI = %02X%02X%02X%02X%02X%02X%02X%02X",
+				AT_PRINTF("AppEUI=%02X%02X%02X%02X%02X%02X%02X%02X",
 						  key_eui[0], key_eui[1], key_eui[2], key_eui[3],
 						  key_eui[4], key_eui[5], key_eui[6], key_eui[7]);
 				api.lorawan.appkey.get(key_eui, 16);
-				AT_PRINTF("AppKey = %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
+				AT_PRINTF("AppKey=%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
 						  key_eui[0], key_eui[1], key_eui[2], key_eui[3],
 						  key_eui[4], key_eui[5], key_eui[6], key_eui[7],
 						  key_eui[8], key_eui[9], key_eui[10], key_eui[11],
@@ -264,36 +270,36 @@ int status_handler(SERIAL_PORT port, char *cmd, stParam *param)
 			{
 				AT_PRINTF("ABP mode");
 				api.lorawan.appskey.get(key_eui, 16);
-				AT_PRINTF("AppsKey = %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
+				AT_PRINTF("AppsKey=%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
 						  key_eui[0], key_eui[1], key_eui[2], key_eui[3],
 						  key_eui[4], key_eui[5], key_eui[6], key_eui[7],
 						  key_eui[8], key_eui[9], key_eui[10], key_eui[11],
 						  key_eui[12], key_eui[13], key_eui[14], key_eui[15]);
 				api.lorawan.nwkskey.get(key_eui, 16);
-				AT_PRINTF("NwsKey = %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
+				AT_PRINTF("NwsKey=%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
 						  key_eui[0], key_eui[1], key_eui[2], key_eui[3],
 						  key_eui[4], key_eui[5], key_eui[6], key_eui[7],
 						  key_eui[8], key_eui[9], key_eui[10], key_eui[11],
 						  key_eui[12], key_eui[13], key_eui[14], key_eui[15]);
 				api.lorawan.daddr.get(key_eui, 4);
-				AT_PRINTF("DevAddr = %02X%02X%02X%02X",
+				AT_PRINTF("DevAddr=%02X%02X%02X%02X",
 						  key_eui[0], key_eui[1], key_eui[2], key_eui[3]);
 			}
 		}
 		else if (nw_mode == 0)
 		{
-			AT_PRINTF("Frequency = %d", api.lora.pfreq.get());
-			AT_PRINTF("SF = %d", api.lora.psf.get());
-			AT_PRINTF("BW = %d", api.lora.pbw.get());
-			AT_PRINTF("CR = %d", api.lora.pcr.get());
-			AT_PRINTF("Preamble length = %d", api.lora.ppl.get());
-			AT_PRINTF("TX power = %d", api.lora.ptp.get());
+			AT_PRINTF("Frequency = %d", api.lorawan.pfreq.get());
+			AT_PRINTF("SF = %d", api.lorawan.psf.get());
+			AT_PRINTF("BW = %d", api.lorawan.pbw.get());
+			AT_PRINTF("CR = %d", api.lorawan.pcr.get());
+			AT_PRINTF("Preamble length = %d", api.lorawan.ppl.get());
+			AT_PRINTF("TX power = %d", api.lorawan.ptp.get());
 		}
 		else
 		{
-			AT_PRINTF("Frequency = %d", api.lora.pfreq.get());
-			AT_PRINTF("Bitrate = %d", api.lora.pbr.get());
-			AT_PRINTF("Deviaton = %d", api.lora.pfdev.get());
+			AT_PRINTF("Frequency = %d", api.lorawan.pfreq.get());
+			AT_PRINTF("Bitrate = %d", api.lorawan.pbr.get());
+			AT_PRINTF("Deviaton = %d", api.lorawan.pfdev.get());
 		}
 	}
 	else
@@ -325,16 +331,17 @@ bool get_at_setting(void)
 	{
 		MYLOG("AT_CMD", "No valid settings found, set to default, read 0X%08X", temp_params.send_interval);
 		g_custom_parameters.send_interval = 0;
-		g_custom_parameters.test_mode = 0;
+		g_custom_parameters.test_mode = 1;
 		save_at_setting();
 		return false;
 	}
 	g_custom_parameters.send_interval = temp_params.send_interval;
 
-	if (temp_params.test_mode > 2)
+	// On RUI3 V4.1.0 linkcheck is not implemented in the API.
+	if ((temp_params.test_mode > 2) || (temp_params.test_mode == 0))
 	{
 		MYLOG("AT_CMD", "Invalid test mode found %d", temp_params.test_mode);
-		g_custom_parameters.test_mode = 0;
+		g_custom_parameters.test_mode = 1;
 		save_at_setting();
 	}
 	else

@@ -135,11 +135,11 @@ void handle_display(void *reason)
 				rak1921_write_line(0, 0, line_str);
 				sprintf(line_str, "Received packets %d", packet_num);
 				rak1921_write_line(1, 0, line_str);
-				sprintf(line_str, "F %.3f", (api.lora.pfreq.get() / 1000000.0));
+				sprintf(line_str, "F %.3f", (api.lorawan.pfreq.get() / 1000000.0));
 				rak1921_write_line(2, 0, line_str);
-				sprintf(line_str, "SF %d", api.lora.psf.get());
+				sprintf(line_str, "SF %d", api.lorawan.psf.get());
 				rak1921_write_line(3, 0, line_str);
-				sprintf(line_str, "BW %d", (api.lora.pbw.get() + 1) * 125);
+				sprintf(line_str, "BW %d", (api.lorawan.pbw.get() + 1) * 125);
 				rak1921_write_line(3, 64, line_str);
 				sprintf(line_str, "RSSI %d", last_rssi);
 				rak1921_write_line(4, 0, line_str);
@@ -150,9 +150,9 @@ void handle_display(void *reason)
 			Serial.println("LPW P2P mode");
 			Serial.printf("Packet # %d RSSI %d SNR %d\n", packet_num, last_rssi, last_snr);
 			Serial.printf("F %.3f SF %d BW %d\n",
-						  (float)api.lora.pfreq.get() / 1000000.0,
-						  api.lora.psf.get(),
-						  (api.lora.pbw.get() + 1) * 125);
+						  (float)api.lorawan.pfreq.get() / 1000000.0,
+						  api.lorawan.psf.get(),
+						  (api.lorawan.pbw.get() + 1) * 125);
 		}
 	}
 	else if (disp_reason[0] == 2)
@@ -607,7 +607,7 @@ void set_cfm(void)
 	use_link_check = false;
 	lorawan_mode = true;
 	// Force LoRaWAN mode (might cause restart)
-	api.lorawan.nwm.set();
+	api.lorawan.nwm.set(1);
 	// Register callbacks
 	api.lorawan.registerRecvCallback(recv_cb_lpw);
 	api.lorawan.registerSendCallback(send_cb_lpw);
@@ -632,16 +632,18 @@ void set_linkcheck(void)
 	use_link_check = true;
 	lorawan_mode = true;
 	// Force LoRaWAN mode (might cause restart)
-	api.lorawan.nwm.set();
+	api.lorawan.nwm.set(1);
 	// Register callbacks
 	api.lorawan.registerRecvCallback(recv_cb_lpw);
 	api.lorawan.registerSendCallback(send_cb_lpw);
 	api.lorawan.registerJoinCallback(join_cb_lpw);
-	api.lorawan.registerLinkCheckCallback(linkcheck_cb_lpw);
+	// On RUI3 V4.1.0 linkcheck is not implemented in the API.
+	// api.lorawan.registerLinkCheckCallback(linkcheck_cb_lpw);
 	// Set unconfirmed packet mode
 	api.lorawan.cfm.set(false);
+	// On RUI3 V4.1.0 linkcheck is not implemented in the API.
 	// Enable LinkCheck
-	api.lorawan.linkcheck.set(2);
+	// api.lorawan.linkcheck.set(2);
 	if (!api.lorawan.join(1, 1, 10, 50))
 	{
 		MYLOG("APP", "Failed to start JOIN");
@@ -660,17 +662,17 @@ void set_p2p(void)
 	{
 		MYLOG("APP", "Failed to stop JOIN");
 	}
-	if (!api.lora.precv(0))
+	if (!api.lorawan.precv(0))
 	{
 		MYLOG("APP", "Failed to stop P2P RX");
 	}
 	// Force LoRa P2P mode (might cause restart)
-	if (!api.lora.nwm.set())
+	if (!api.lorawan.nwm.set(0))
 	{
 		MYLOG("APP", "Failed to set P2P Mode");
 	}
 	// Register callbacks
-	api.lora.registerPRecvCallback(recv_cb_p2p);
+	api.lorawan.registerPRecvCallback(recv_cb_p2p);
 	// Enable RX mode
-	api.lora.precv(65533);
+	api.lorawan.precv(65533);
 }

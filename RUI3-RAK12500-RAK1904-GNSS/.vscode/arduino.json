@@ -1,6 +1,6 @@
 {
     "board": "rak_rui:nrf52:WisCoreRAK4631Board",
-    "port": "COM71",
+    "port": "COM73",
     "output": "build",
     "sketch": "RUI3-RAK12500-RAK1904-GNSS.ino",
     "configuration": "softdevice=s140v6,debug=l0,supportnfc=1,supportat=1,supportlora=1,supportAS923=1,supportAU915=1,supportCN470=2,supportCN779=2,supportEU433=2,supportEU868=1,supportKR920=1,supportIN865=1,supportUS915=1,supportRU864=1,supportLA915=1"

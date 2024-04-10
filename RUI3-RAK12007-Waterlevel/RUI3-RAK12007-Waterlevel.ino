@@ -103,11 +103,12 @@ void sendCallback(int32_t status)
  */
 void recv_cb(rui_lora_p2p_recv_t data)
 {
-	if (data.Status != 0)
-	{
-		MYLOG("RX-P2P-CB", "P2P RX error %d", data.Status);
-	}
-	else
+	// data.Status is not supported in RUI4.1.0
+	// if (data.Status != 0)
+	// {
+	// 	MYLOG("RX-P2P-CB", "P2P RX error %d", data.Status);
+	// }
+	// else
 	{
 		MYLOG("RX-P2P-CB", "P2P RX, RSSI %d, SNR %d", data.Rssi, data.Snr);
 #if MY_DEBUG == 1
@@ -175,13 +176,13 @@ void setup()
 		api.lorawan.registerRecvCallback(receiveCallback);
 		api.lorawan.registerSendCallback(sendCallback);
 		api.lorawan.registerJoinCallback(joinCallback);
-		api.lorawan.registerLinkCheckCallback(linkcheckCallback);
+		// api.lorawan.registerLinkCheckCallback(linkcheckCallback);  // Requires RUI3 V4.1.1
 	}
 	else // Setup for LoRa P2P
 	{
-		api.lora.registerPRecvCallback(recv_cb);
-		api.lora.registerPSendCallback(send_cb);
-		api.lora.registerPSendCADCallback(cad_cb);
+		api.lorawan.registerPRecvCallback(recv_cb);
+		api.lorawan.registerPSendCallback(send_cb);
+		api.lorawan.registerPSendCADCallback(cad_cb);
 	}
 
 	pinMode(LED_GREEN, OUTPUT);
@@ -419,7 +420,7 @@ void send_packet(void)
 		digitalWrite(LED_BLUE, LOW);
 		tx_retry = false;
 
-		if (api.lora.psend(g_solution_data.getSize(), g_solution_data.getBuffer(), false))
+		if (api.lorawan.psend(g_solution_data.getSize(), g_solution_data.getBuffer(), false))
 		{
 			MYLOG("UPLINK", "Packet enqueued");
 		}
@@ -432,7 +433,7 @@ void send_packet(void)
 
 void resend_packet(void *)
 {
-	if (api.lora.psend(packet_backup_len, packet_backup_buffer, true))
+	if (api.lorawan.psend(packet_backup_len, packet_backup_buffer, true))
 	{
 		MYLOG("UPLINK", "Packet enqueued");
 	}

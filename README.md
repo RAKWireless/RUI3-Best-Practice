@@ -3,6 +3,22 @@
 
 # RUI3 Best Practices
 
+----
+----
+#### ⚠️ Important note about RUI3 version compatibility 
+The main branch of this repository requires RUI3 V4.1.0.    
+_**But RUI3 V4.1.0 does not support the LinkCheck functionality!**_    
+_**In addition the format of API calls for LoRa P2P have changed in RUI3 V4.1.1!**_     
+Therefor the RUI3-Signal-Meter-P2P-LPWAN example requires the staging version V4.1.1     
+
+The examples for RUI3 V4.1.1 are in the [branch V4.1.1](https://github.com/RAKWireless/RUI3-Best-Practice/tree/V4.1.1).    
+At the time this code was published, RUI3 V4.1.1 is still in staging. It can be installed by using the Arduino BSP JSON file for the staging version by using  _**`https://raw.githubusercontent.com/RAKWireless/RAKwireless-Arduino-BSP-Index/staging/RUI_4.1.1_273/package_rakwireless_com_rui_index.json`**_ in the **`Additional Boards Manager URLs`** settings in ArduinoIDE.     
+
+Installation guides for Arduino IDE and Visual Studio Code can be found in the [RAK Documentation Center](https://docs.rakwireless.com/RUI3/Supported-IDE/).    
+
+----
+----
+
 This repo provides additional examples for RUI3. It focuses on low power consumption and practical examples for range tests, location tracking and sensing applications using the WisBlock Modular System.    
 
 A collection of tips and tricks about the usage or RUI3 is as well available in the [Tips-n-Tricks](./Tips-n-Tricks.md) file.
@@ -44,11 +60,6 @@ The following modules are supported by RUI3:
 | [RAK4630 stamp module](https://docs.rakwireless.com/Product-Categories/WisDuo/RAK4630-Module/Overview/) |  |
 | [RAK11720 stamp module](https://docs.rakwireless.com/Product-Categories/WisDuo/RAK11720-Module/Overview/)     |  |
 | [RAK11721 breakout board](https://docs.rakwireless.com/Product-Categories/WisDuo/RAK11721-Breakout-Board/Overview/)     |  |
-
-#### ⚠️ Important note about RUI3 version compatibility 
-These examples require at least RUI3 V4.1.1 or newer.
-At the time this code was published, RUI3 V4.1.1 was still in staging. It can be installed by using the Arduino BSP JSON file for the staging version by using  _**`https://raw.githubusercontent.com/RAKWireless/RAKwireless-Arduino-BSP-Index/staging/RUI_4.1.1_266/package_rakwireless_com_rui_index.json`**_ in the **`Additional Boards Manager URLs`** settings in ArduinoIDE.     
-Installation guides for Arduino IDE and Visual Studio Code can be found in the [RAK Documentation Center](https://docs.rakwireless.com/RUI3/Supported-IDE/).
 
 ----
 

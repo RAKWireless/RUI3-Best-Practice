@@ -10,7 +10,7 @@
  */
 #include "../inc/app.h"
 
-#include <rak1906.h> // Install manually from https://downloads.rakwireless.com/#RUI/RUI3/Library/ ==> RAKwireless_RAK1906_Environment_BME680.zip
+#include "../inc/rak1906.h" //
 
 /** BME680 instance for Wire */
 rak1906 bme;

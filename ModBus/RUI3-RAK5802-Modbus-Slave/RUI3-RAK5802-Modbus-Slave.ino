@@ -34,8 +34,8 @@ volatile bool sensor_active = false;
 void setup()
 {
 	// We simulate a ModBus sensor here and switch off the LoRa complete
-	api.lora.nwm.set();
-	api.lora.precv(0);
+	api.lorawan.nwm.set(0);
+	api.lorawan.precv(0);
 
 	Serial.begin(115200);
 	pinMode(WB_IO2, OUTPUT);

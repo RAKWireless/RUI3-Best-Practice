@@ -224,15 +224,15 @@ int status_handler(SERIAL_PORT port, char *cmd, stParam *param)
 			{
 				AT_PRINTF("OTAA mode");
 				api.lorawan.deui.get(key_eui, 8);
-				AT_PRINTF("DevEUI = %02X%02X%02X%02X%02X%02X%02X%02X",
+				AT_PRINTF("DevEUI=%02X%02X%02X%02X%02X%02X%02X%02X",
 						  key_eui[0], key_eui[1], key_eui[2], key_eui[3],
 						  key_eui[4], key_eui[5], key_eui[6], key_eui[7]);
 				api.lorawan.appeui.get(key_eui, 8);
-				AT_PRINTF("AppEUI = %02X%02X%02X%02X%02X%02X%02X%02X",
+				AT_PRINTF("AppEUI=%02X%02X%02X%02X%02X%02X%02X%02X",
 						  key_eui[0], key_eui[1], key_eui[2], key_eui[3],
 						  key_eui[4], key_eui[5], key_eui[6], key_eui[7]);
 				api.lorawan.appkey.get(key_eui, 16);
-				AT_PRINTF("AppKey = %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
+				AT_PRINTF("AppKey=%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
 						  key_eui[0], key_eui[1], key_eui[2], key_eui[3],
 						  key_eui[4], key_eui[5], key_eui[6], key_eui[7],
 						  key_eui[8], key_eui[9], key_eui[10], key_eui[11],
@@ -242,36 +242,36 @@ int status_handler(SERIAL_PORT port, char *cmd, stParam *param)
 			{
 				AT_PRINTF("ABP mode");
 				api.lorawan.appskey.get(key_eui, 16);
-				AT_PRINTF("AppsKey = %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
+				AT_PRINTF("AppsKey=%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
 						  key_eui[0], key_eui[1], key_eui[2], key_eui[3],
 						  key_eui[4], key_eui[5], key_eui[6], key_eui[7],
 						  key_eui[8], key_eui[9], key_eui[10], key_eui[11],
 						  key_eui[12], key_eui[13], key_eui[14], key_eui[15]);
 				api.lorawan.nwkskey.get(key_eui, 16);
-				AT_PRINTF("NwsKey = %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
+				AT_PRINTF("NwsKey=%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
 						  key_eui[0], key_eui[1], key_eui[2], key_eui[3],
 						  key_eui[4], key_eui[5], key_eui[6], key_eui[7],
 						  key_eui[8], key_eui[9], key_eui[10], key_eui[11],
 						  key_eui[12], key_eui[13], key_eui[14], key_eui[15]);
 				api.lorawan.daddr.get(key_eui, 4);
-				AT_PRINTF("DevAddr = %02X%02X%02X%02X",
+				AT_PRINTF("DevAddr=%02X%02X%02X%02X",
 						  key_eui[0], key_eui[1], key_eui[2], key_eui[3]);
 			}
 		}
 		else if (nw_mode == 0)
 		{
-			AT_PRINTF("Frequency = %d", api.lora.pfreq.get());
-			AT_PRINTF("SF = %d", api.lora.psf.get());
-			AT_PRINTF("BW = %d", api.lora.pbw.get());
-			AT_PRINTF("CR = %d", api.lora.pcr.get());
-			AT_PRINTF("Preamble length = %d", api.lora.ppl.get());
-			AT_PRINTF("TX power = %d", api.lora.ptp.get());
+			AT_PRINTF("Frequency = %d", api.lorawan.pfreq.get());
+			AT_PRINTF("SF = %d", api.lorawan.psf.get());
+			AT_PRINTF("BW = %d", api.lorawan.pbw.get());
+			AT_PRINTF("CR = %d", api.lorawan.pcr.get());
+			AT_PRINTF("Preamble length = %d", api.lorawan.ppl.get());
+			AT_PRINTF("TX power = %d", api.lorawan.ptp.get());
 		}
 		else
 		{
-			AT_PRINTF("Frequency = %d", api.lora.pfreq.get());
-			AT_PRINTF("Bitrate = %d", api.lora.pbr.get());
-			AT_PRINTF("Deviaton = %d", api.lora.pfdev.get());
+			AT_PRINTF("Frequency = %d", api.lorawan.pfreq.get());
+			AT_PRINTF("Bitrate = %d", api.lorawan.pbr.get());
+			AT_PRINTF("Deviaton = %d", api.lorawan.pfdev.get());
 		}
 	}
 	else
