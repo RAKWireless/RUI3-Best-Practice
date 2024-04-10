@@ -224,15 +224,15 @@ int status_handler(SERIAL_PORT port, char *cmd, stParam *param)
 			{
 				AT_PRINTF("OTAA mode");
 				api.lorawan.deui.get(key_eui, 8);
-				AT_PRINTF("DevEUI = %02X%02X%02X%02X%02X%02X%02X%02X",
+				AT_PRINTF("DevEUI=%02X%02X%02X%02X%02X%02X%02X%02X",
 						  key_eui[0], key_eui[1], key_eui[2], key_eui[3],
 						  key_eui[4], key_eui[5], key_eui[6], key_eui[7]);
 				api.lorawan.appeui.get(key_eui, 8);
-				AT_PRINTF("AppEUI = %02X%02X%02X%02X%02X%02X%02X%02X",
+				AT_PRINTF("AppEUI=%02X%02X%02X%02X%02X%02X%02X%02X",
 						  key_eui[0], key_eui[1], key_eui[2], key_eui[3],
 						  key_eui[4], key_eui[5], key_eui[6], key_eui[7]);
 				api.lorawan.appkey.get(key_eui, 16);
-				AT_PRINTF("AppKey = %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
+				AT_PRINTF("AppKey=%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
 						  key_eui[0], key_eui[1], key_eui[2], key_eui[3],
 						  key_eui[4], key_eui[5], key_eui[6], key_eui[7],
 						  key_eui[8], key_eui[9], key_eui[10], key_eui[11],
@@ -242,19 +242,19 @@ int status_handler(SERIAL_PORT port, char *cmd, stParam *param)
 			{
 				AT_PRINTF("ABP mode");
 				api.lorawan.appskey.get(key_eui, 16);
-				AT_PRINTF("AppsKey = %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
+				AT_PRINTF("AppsKey=%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
 						  key_eui[0], key_eui[1], key_eui[2], key_eui[3],
 						  key_eui[4], key_eui[5], key_eui[6], key_eui[7],
 						  key_eui[8], key_eui[9], key_eui[10], key_eui[11],
 						  key_eui[12], key_eui[13], key_eui[14], key_eui[15]);
 				api.lorawan.nwkskey.get(key_eui, 16);
-				AT_PRINTF("NwsKey = %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
+				AT_PRINTF("NwsKey=%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
 						  key_eui[0], key_eui[1], key_eui[2], key_eui[3],
 						  key_eui[4], key_eui[5], key_eui[6], key_eui[7],
 						  key_eui[8], key_eui[9], key_eui[10], key_eui[11],
 						  key_eui[12], key_eui[13], key_eui[14], key_eui[15]);
 				api.lorawan.daddr.get(key_eui, 4);
-				AT_PRINTF("DevAddr = %02X%02X%02X%02X",
+				AT_PRINTF("DevAddr=%02X%02X%02X%02X",
 						  key_eui[0], key_eui[1], key_eui[2], key_eui[3]);
 			}
 		}

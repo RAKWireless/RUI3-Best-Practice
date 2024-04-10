@@ -30,7 +30,7 @@
 		if (tag)                         \
 			Serial6.printf("[%s] ", tag); \
 		Serial6.printf(__VA_ARGS__);      \
-		Serial6.printf("\n");             \
+		Serial6.printf("\r\n");             \
 	} while (0);                         \
 	delay(100)
 #else
