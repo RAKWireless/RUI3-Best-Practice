@@ -116,6 +116,12 @@ void setup()
 
 	// Create a timer.
 	api.system.timer.create(RAK_TIMER_0, sensor_handler, RAK_TIMER_PERIODIC);
+	// If send interval is not set with AT commands, set it to 30 seconds
+	if (custom_parameters.send_interval == 0)
+	{
+		custom_parameters.send_interval = 30000;
+		save_at_setting();
+	}
 	if (custom_parameters.send_interval != 0)
 	{
 		api.system.timer.start(RAK_TIMER_0, custom_parameters.send_interval, NULL);
