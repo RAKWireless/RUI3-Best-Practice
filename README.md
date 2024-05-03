@@ -111,6 +111,9 @@ _**⚠️ INFORMATION**_
 This example uses a modified version of the [Modbus-Master-Slave-for-Arduino](https://github.com/smarmengol/Modbus-Master-Slave-for-Arduino) library. This library was choosen because of its small code size. However, due to some incompatible definitions, it did not compile with RUI3. The library was slightly modified to work with RUI3 and is included as project files _**`RUI3_ModbusRtu.cpp`**_ and _**`RUI3_ModbusRtu.h`**_.    
 The original libray is licensed under the [GNU LESSER GENERAL PUBLIC LICENSE Version 2.1](https://github.com/smarmengol/Modbus-Master-Slave-for-Arduino/blob/master/LICENSE.md)
 
+## [LoRa P2P](./LoRa_P2P)
+RUI3 code example for a simple LoRa P2P communication. _**LoRa_P2P_TX**_ is sending packets in intervals (can be setup with custom AT command ATC+SENDINT=xxx (xxx in seconds)). _**LoRa_P2P_RX**_ is listening to incoming packets and response within a second with its own packet.
+
 ## [RUI3-Mesh](./RUI3-Mesh)
 This is a PoC of a simple LoRa Mesh Network. It includes everything to setup a Mesh Network (compatible with [WisBlock-API-Mesh](https://github.com/beegee-tokyo/WisBlock-API-Mesh)).    
 It supports a limited number of Mesh nodes (15 with the RAK3172 and 30 with the RAK4630 and RAK11720) and sends a dummy data packet.    
@@ -121,7 +124,6 @@ RUI3 code example for the [WisBlock Kit 1](https://store.rakwireless.com/product
 
 ## [RUI3-WisBlock-Kit-4](./RUI3-WisBlock-Kit-4)
 RUI3 code example for the [WisBlock Kit 4](https://store.rakwireless.com/products/wisblock-kit-4-air-quality-monitor) which uses the RAK1906 (temperature, humidity and barometric pressure) sensor. Ideal if the Kit 4 is changed to use RUI3 for lower the power consumption, specially if the RAK4631 is replaced with a RAK3372 WisBlock Core Module (RAK3172).    
-
 
 ----
 
