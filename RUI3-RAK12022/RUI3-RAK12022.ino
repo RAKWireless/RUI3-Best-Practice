@@ -78,6 +78,18 @@ void receiveCallback(SERVICE_LORA_RECEIVE_T *data)
 }
 
 /**
+ * @brief Callback for LinkCheck result
+ *
+ * @param data pointer to structure with the linkcheck result
+ */
+void linkcheckCallback(SERVICE_LORA_LINKCHECK_T *data)
+{
+	MYLOG("LC_CB", "%s Margin %d GW# %d RSSI%d SNR %d", data->State == 0 ? "Success" : "Failed",
+		  data->DemodMargin, data->NbGateways,
+		  data->Rssi, data->Snr);
+}
+
+/**
  * @brief LoRaWAN callback after TX is finished
  *
  * @param status TX status
@@ -150,10 +162,13 @@ void setup()
 
 		g_data_rate = api.lorawan.dr.get();
 
+		g_linkcheck = api.lorawan.linkcheck.get();
+
 		// Setup the callbacks for joined and send finished
 		api.lorawan.registerRecvCallback(receiveCallback);
 		api.lorawan.registerSendCallback(sendCallback);
 		api.lorawan.registerJoinCallback(joinCallback);
+		api.lorawan.registerLinkCheckCallback(linkcheckCallback);
 	}
 	else // Setup for LoRa P2P
 	{
@@ -204,6 +219,8 @@ void setup()
 	get_at_setting();
 
 	digitalWrite(LED_GREEN, LOW);
+
+	api.system.lpm.set(1);
 
 	// Configure PT100 sensor
 	has_rak12022 = maxTemp.begin(Max_CS, MAX31865_3WIRE, MAX31865_PT100); // depending on sensor type, choose MAX31865_2WIRE, MAX31865_3WIRE or MAX31865_4WIRE)
@@ -259,6 +276,8 @@ void setup()
 		MYLOG("SETUP", "Retry = %d", g_confirmed_retry);
 
 		MYLOG("SETUP", "DR = %d", g_data_rate);
+
+		MYLOG("SETUP", "LINKCHECK = %d", g_linkcheck);
 	}
 
 	// Enable low power mode

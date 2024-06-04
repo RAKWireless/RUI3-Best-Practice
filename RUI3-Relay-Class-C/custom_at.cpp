@@ -200,18 +200,18 @@ int status_handler(SERIAL_PORT port, char *cmd, stParam *param)
 		}
 		else if (nw_mode == 0)
 		{
-			AT_PRINTF("Freq. = %d", api.lorawan.pfreq.get());
-			AT_PRINTF("SF = %d", api.lorawan.psf.get());
-			AT_PRINTF("BW = %d", api.lorawan.pbw.get());
-			AT_PRINTF("CR = %d", api.lorawan.pcr.get());
-			AT_PRINTF("Preamble length = %d", api.lorawan.ppl.get());
-			AT_PRINTF("TX power = %d", api.lorawan.ptp.get());
+			AT_PRINTF("Freq. = %d", api.lora.pfreq.get());
+			AT_PRINTF("SF = %d", api.lora.psf.get());
+			AT_PRINTF("BW = %d", api.lora.pbw.get());
+			AT_PRINTF("CR = %d", api.lora.pcr.get());
+			AT_PRINTF("Preamble length = %d", api.lora.ppl.get());
+			AT_PRINTF("TX power = %d", api.lora.ptp.get());
 		}
 		else
 		{
-			AT_PRINTF("Freq. = %d", api.lorawan.pfreq.get());
-			AT_PRINTF("Bitrate = %d", api.lorawan.pbr.get());
-			AT_PRINTF("Deviaton = %d", api.lorawan.pfdev.get());
+			AT_PRINTF("Freq. = %d", api.lora.pfreq.get());
+			AT_PRINTF("Bitrate = %d", api.lora.pbr.get());
+			AT_PRINTF("Deviaton = %d", api.lora.pfdev.get());
 		}
 	}
 	else

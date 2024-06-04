@@ -105,16 +105,16 @@ void setup(void)
 #endif
 
 	// Set LoRa P2P configuration
-	api.lorawan.nwm.set(0);
+	api.lora.nwm.set();
 
 	/// \todo this should be done by AT commands!
 	// AT+P2P=916000000:7:0:1:8:5
-	api.lorawan.pfreq.set(916000000);
-	api.lorawan.psf.set(7);
-	api.lorawan.pbw.set(0);
-	api.lorawan.pcr.set(1);
-	api.lorawan.ppl.set(8);
-	api.lorawan.ptp.set(5);
+	api.lora.pfreq.set(916000000);
+	api.lora.psf.set(7);
+	api.lora.pbw.set(0);
+	api.lora.pcr.set(1);
+	api.lora.ppl.set(8);
+	api.lora.ptp.set(5);
 
 	digitalWrite(LED_GREEN, LOW);
 
@@ -150,15 +150,15 @@ void setup(void)
 	// Setup callbacks
 	g_mesh_events.data_avail_cb = on_mesh_data;
 	g_mesh_events.map_changed_cb = map_changed_cb;
-	api.lorawan.registerPRecvCallback(recv_cb);
-	api.lorawan.registerPSendCallback(send_cb);
-	api.lorawan.registerPSendCADCallback(cad_cb);
+	api.lora.registerPRecvCallback(recv_cb);
+	api.lora.registerPSendCallback(send_cb);
+	api.lora.registerPSendCADCallback(cad_cb);
 
 	// Initialize the LoRa Mesh * events
 	init_mesh(&g_mesh_events);
 
 	// Enable RX mode (always with TX allowed)
-	api.lorawan.precv(65533);
+	api.lora.precv(65533);
 
 	// Timer to handle events
 	api.system.timer.create(RAK_TIMER_3, timed_loop, RAK_TIMER_ONESHOT);

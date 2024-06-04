@@ -18,8 +18,6 @@ With the _**RUI3 Best Practice**_ examples I want to share how I am using RUI3. 
 
 #### ⚠️ Important note about RUI3 version compatibility 
 These tips and tricks require at least RUI3 V4.1.1 or newer.
-At the time this document was published, RUI3 V4.1.1 was still in staging. It can be installed by using the Arduino BSP JSON file for the staging version by using  _**`https://raw.githubusercontent.com/RAKWireless/RAKwireless-Arduino-BSP-Index/staging/RUI_4.1.1_266/package_rakwireless_com_rui_index.json`**_ in the **`Additional Boards Manager URLs`** settings in ArduinoIDE.     
-Installation guides for Arduino IDE and Visual Studio Code can be found in the [RAK Documentation Center](https://docs.rakwireless.com/RUI3/Supported-IDE/).
 
 ## Content
 
@@ -104,7 +102,7 @@ In the following paragraphs you can find the essential parameters required to jo
 Before any LoRaWAN parameter can be set, the device has to switch to LoRaWAN mode. The selected mode is, as all other parameters, saved in the flash memory and reused on the next power up.
 
 ```cpp
-api.lorawan.nwm.set(1); // Set the device into LoRaWAN mode
+api.lorawan.nwm.set(); // Set the device into LoRaWAN mode
 ```
 INFO ⚠️    
 If the device was in LoRa P2P mode, it will reboot after this API call.
@@ -276,7 +274,7 @@ Putting the minimum set of API calls together for a LoRaWAN join request and try
 
 ### OTAA Join request
 ```cpp
-api.lorawan.nwm.set(1); // Set the device into LoRaWAN mode
+api.lorawan.nwm.set(); // Set the device into LoRaWAN mode
 api.lorawan.njm.set(1); // Set LoRaWAN join mode OTAA
 uint8_t this_dev_eui = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
 api.lorawan.deui.set(this_dev_eui, 8);
@@ -301,7 +299,7 @@ api.lorawan.send(sizeof(payload), payload, 2, true, 1);
 
 ### ABP Join request
 ```cpp
-api.lorawan.nwm.set(1); // Set the device into LoRaWAN mode
+api.lorawan.nwm.set(); // Set the device into LoRaWAN mode
 api.lorawan.njm.set(0); // Set LoRaWAN join mode ABP
 uint8_t this_dev_addr = {0x01, 0x02, 0x03, 0x04};
 api.lorawan.daddr.set(this_dev_addr, 4);
@@ -340,7 +338,7 @@ To be able to communicate between two LoRa nodes with LoRa P2P, both nodes have 
 Before any LoRa P2P parameter can be set, the device has to switch to LoRa P2P mode. The selected mode is, as all other parameters, saved in the flash memory and reused on the next power up.
 
 ```cpp
-api.lorawan.nwm.set(1); // Set the device into LoRa P2P mode
+api.lora.nwm.set(); // Set the device into LoRa P2P mode
 ```
 INFO ⚠️    
 If the device was in LoRaWAN mode, it will reboot after this API call.
@@ -349,14 +347,14 @@ If the device was in LoRaWAN mode, it will reboot after this API call.
 Set the frequency for the communication in Hz. Make sure the selected frequency is within the supported range of the device.
 
 ```cpp
-api.lorawan.pfreq.set(868000000); // Set the LoRa frequency to 868 MHz
+api.lora.pfreq.set(868000000); // Set the LoRa frequency to 868 MHz
 ```
 
 ### Set LoRa spreading factor
 The spreading factor can be set to values between 6 and 12.   
 
 ```cpp
-api.lorawan.psf.set(12); // Set LoRa SF to 12
+api.lora.psf.set(12); // Set LoRa SF to 12
 ```
 
 ### Set LoRa bandwidth
@@ -370,7 +368,7 @@ The bandwidth can be set to these values:
 | 8       | 41.67            | 9       | 62.5             |
 
 ```cpp
-api.lorawan.psf.set(12); // Set LoRa SF to 12
+api.lora.psf.set(12); // Set LoRa SF to 12
 ```
 
 ### Set LoRa coding rate
@@ -381,7 +379,7 @@ The coding rate can be set to these values:
 | 2       | 4/7         | 3       | 4/8         |
 
 ```cpp
-api.lorawan.pcr.set(0); // Set LoRa CR to 0 == 4/5
+api.lora.pcr.set(0); // Set LoRa CR to 0 == 4/5
 ```
 
 ### Set LoRa preamble length
@@ -405,7 +403,7 @@ The result of CAD is returned in a callback. See more details in [RUI3 event cal
 
 Function definition:
 ```cpp
-api.lorawan.psend(length, payload, ena_cad);
+api.lora.psend(length, payload, ena_cad);
 ```
 The parameters are:
 - length - the length of the payload
@@ -433,7 +431,7 @@ Permanent RX mode means that the device continues to listen to incoming packets 
 To be able to process data from another LoRa P2P device, the LoRa P2P receive callback has to be implemented. See more details in [RUI3 event callbacks explained](#rui3-event-callbacks-explained)     
 
 ```cpp
-api.lorawan.precv(65533); // Start RX mode with the option to send a packet
+api.lora.precv(65533); // Start RX mode with the option to send a packet
 ```
 [Back to Content](#content)
 
@@ -443,14 +441,14 @@ api.lorawan.precv(65533); // Start RX mode with the option to send a packet
 Putting the minimum set of API calls together for a LoRa P2P node, ready to receive and send packets to another LoRa P2P node.
 
 ```cpp
-api.lorawan.nwm.set(1);
-api.lorawan.pfreq.set(868000000); // Set the LoRa frequency to 868 MHz
-api.lorawan.psf.set(12); // Set LoRa SF to 12
-api.lorawan.pcr.set(0); // Set LoRa CR to 0 == 4/5
+api.lora.nwm.set();
+api.lora.pfreq.set(868000000); // Set the LoRa frequency to 868 MHz
+api.lora.psf.set(12); // Set LoRa SF to 12
+api.lora.pcr.set(0); // Set LoRa CR to 0 == 4/5
 api.lorawan.ppl.set(8); // Set LoRa preamble length to 8
 api.lorawan.ptp.set(22); // Set LoRa transmit power to 22dBm
 
-api.lorawan.precv(65533); // Start RX mode with the option to send a packet
+api.lora.precv(65533); // Start RX mode with the option to send a packet
 
 // Send a data packet
 uint8_t payload[] = "example";
@@ -647,7 +645,7 @@ void send_cb(void)
 
 And then the callback can be registered
 ```cpp
-api.lorawan.registerPSendCallback(send_cb);
+api.lora.registerPSendCallback(send_cb);
 ```
 
 ### LoRa P2P data received
@@ -673,7 +671,7 @@ void recv_cb(rui_lora_p2p_recv_t data)
 
 And then the callback can be registered
 ```cpp
-api.lorawan.registerPRecvCallback(recv_cb);
+api.lora.registerPRecvCallback(recv_cb);
 ```
 
 ### LoRa P2P CAD finished callback
@@ -696,7 +694,7 @@ The parameter `result` is true if activity was detected, false if no activity wa
 
 And then the callback can be registered
 ```cpp
-api.lorawan.registerPSendCADCallback(cad_cb);
+api.lora.registerPSendCADCallback(cad_cb);
 ```
 
 [Back to Content](#content)

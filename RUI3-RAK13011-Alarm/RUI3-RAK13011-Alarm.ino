@@ -329,7 +329,7 @@ void send_packet(void)
 		}
 		Serial.println("");
 
-		if (api.lorawan.psend(g_solution_data.getSize() + 8, packet_buffer))
+		if (api.lora.psend(g_solution_data.getSize() + 8, packet_buffer))
 		{
 			MYLOG("UPLINK", "Packet enqueued");
 		}

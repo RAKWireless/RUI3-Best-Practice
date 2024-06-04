@@ -142,13 +142,13 @@ void setup()
 		api.lorawan.registerRecvCallback(receiveCallback);
 		api.lorawan.registerSendCallback(sendCallback);
 		api.lorawan.registerJoinCallback(joinCallback);
-		// api.lorawan.registerLinkCheckCallback(linkcheckCallback);  // Requires RUI3 V4.1.1
+		api.lorawan.registerLinkCheckCallback(linkcheckCallback);
 	}
 	else // Setup for LoRa P2P
 	{
-		api.lorawan.registerPRecvCallback(recv_cb);
-		api.lorawan.registerPSendCallback(send_cb);
-		api.lorawan.registerPSendCADCallback(cad_cb);
+		api.lora.registerPRecvCallback(recv_cb);
+		api.lora.registerPSendCallback(send_cb);
+		api.lora.registerPSendCADCallback(cad_cb);
 	}
 
 	pinMode(LED_GREEN, OUTPUT);
@@ -382,7 +382,7 @@ void send_packet(void)
 
 		digitalWrite(LED_BLUE, LOW);
 
-		if (api.lorawan.psend(g_solution_data.getSize(), g_solution_data.getBuffer(), true))
+		if (api.lora.psend(g_solution_data.getSize(), g_solution_data.getBuffer(), true))
 		{
 			MYLOG("UPLINK", "Packet enqueued");
 		}

@@ -34,8 +34,8 @@ volatile bool sensor_active = false;
 void setup()
 {
 	// We simulate a ModBus sensor here and switch off the LoRa complete
-	api.lorawan.nwm.set(0);
-	api.lorawan.precv(0);
+	api.lora.nwm.set();
+	api.lora.precv(0);
 
 	Serial.begin(115200);
 	pinMode(WB_IO2, OUTPUT);
@@ -124,11 +124,11 @@ void loop()
 		{
 			MYLOG("POLL", "Poll result is %d", result);
 
-			MYLOG("SENS", "Data[0] = %d", coils_n_regs.data[0]);
-			MYLOG("SENS", "Data[1] = %d", coils_n_regs.data[1]);
-			MYLOG("SENS", "Data[2] = %d", coils_n_regs.data[2]);
-			MYLOG("SENS", "Data[3] = %d", coils_n_regs.data[3]);
-			MYLOG("SENS", "Data[4] = %d", coils_n_regs.data[4]);
+			MYLOG("POLL", "Data[0] = %d", coils_n_regs.data[0]);
+			MYLOG("POLL", "Data[1] = %d", coils_n_regs.data[1]);
+			MYLOG("POLL", "Data[2] = %d", coils_n_regs.data[2]);
+			MYLOG("POLL", "Data[3] = %d", coils_n_regs.data[3]);
+			MYLOG("POLL", "Data[4] = %d", coils_n_regs.data[4]);
 			digitalWrite(LED_GREEN, bitRead(coils_n_regs.data[0], 0) == 0 ? LOW : HIGH);
 			digitalWrite(LED_BLUE, bitRead(coils_n_regs.data[0], 1) == 0 ? LOW : HIGH);
 		}

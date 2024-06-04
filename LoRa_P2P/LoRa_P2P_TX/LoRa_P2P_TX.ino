@@ -14,6 +14,7 @@
 
 /** Payload buffer */
 uint8_t g_solution_data[64];
+volatile bool tx_active = false;
 
 /**
  * @brief LoRa P2P callback if a packet was received
@@ -28,6 +29,7 @@ void recv_cb(rui_lora_p2p_recv_t data)
 		Serial.printf("%02X", data.Buffer[i]);
 	}
 	Serial.print("\r\n");
+	tx_active = false;
 }
 
 /**
@@ -38,6 +40,7 @@ void send_cb(void)
 {
 	MYLOG("TX-P2P-CB", "P2P TX finished");
 	digitalWrite(LED_BLUE, LOW);
+	tx_active = false;
 }
 
 /**
@@ -48,6 +51,7 @@ void send_cb(void)
 void cad_cb(bool result)
 {
 	MYLOG("CAD-P2P-CB", "P2P CAD reports %s", result ? "activity" : "no activity");
+	tx_active = false;
 }
 
 /**
@@ -57,20 +61,20 @@ void cad_cb(bool result)
 void setup()
 {
 	// Force P2P
-	api.lorawan.nwm.set(0);
+	api.lora.nwm.set();
 
 	// Force P2P setup
-	api.lorawan.pfreq.set(916100000);
-	api.lorawan.psf.set(7);
-	api.lorawan.pbw.set(0);
-	api.lorawan.pcr.set(1);
-	api.lorawan.ppl.set(8);
-	api.lorawan.ptp.set(22);
+	api.lora.pfreq.set(916100000);
+	api.lora.psf.set(7);
+	api.lora.pbw.set(0);
+	api.lora.pcr.set(1);
+	api.lora.ppl.set(8);
+	api.lora.ptp.set(22);
 
 	// Setup for LoRa P2P
-	api.lorawan.registerPRecvCallback(recv_cb);
-	api.lorawan.registerPSendCallback(send_cb);
-	api.lorawan.registerPSendCADCallback(cad_cb);
+	api.lora.registerPRecvCallback(recv_cb);
+	api.lora.registerPSendCallback(send_cb);
+	api.lora.registerPSendCADCallback(cad_cb);
 
 	pinMode(LED_GREEN, OUTPUT);
 	digitalWrite(LED_GREEN, HIGH);
@@ -129,7 +133,7 @@ void setup()
 
 	digitalWrite(LED_BLUE, LOW);
 	// Enable RX permanent with TX possible
-	api.lorawan.precv(65533);
+	api.lora.precv(65533);
 
 	// Enable low power mode
 	api.system.lpm.set(2);
@@ -151,6 +155,12 @@ void setup()
  */
 void sensor_handler(void *)
 {
+	if (tx_active)
+	{
+		MYLOG("UPLINK", "TX still active");
+		return;
+	}
+
 	MYLOG("UPLINK", "Start");
 	digitalWrite(LED_BLUE, HIGH);
 
@@ -177,8 +187,9 @@ void send_packet(void)
 
 	digitalWrite(LED_BLUE, LOW);
 
-	if (api.lorawan.psend(4, g_solution_data, true))
+	if (api.lora.psend(4, g_solution_data, true))
 	{
+		tx_active = true;
 		MYLOG("UPLINK", "Packet enqueued");
 	}
 	else

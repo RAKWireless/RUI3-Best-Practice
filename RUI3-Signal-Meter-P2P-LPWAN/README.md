@@ -5,9 +5,7 @@
 ----
 
 #### ⚠️ IMPORTANT ⚠️        
-This firmware requires at least RUI3 V4.1.1_266 or newer.
-RUI3 V4.1.1 is at the time of post only available as staging BSP version and is not published officially.
-RUI3 staging versions can be installed to use the Arduino BSP JSON files that can be found in the [staging branch of the BSP repository](https://github.com/RAKWireless/RAKwireless-Arduino-BSP-Index/tree/staging/RUI_4.1.1_266) (Example link for staging version 4.1.1_266)
+This firmware requires at least RUI3 V4.1.1 or newer.
 
 ----
 

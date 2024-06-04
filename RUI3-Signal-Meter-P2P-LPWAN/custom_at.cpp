@@ -136,12 +136,6 @@ int test_mode_handler(SERIAL_PORT port, char *cmd, stParam *param)
 
 		MYLOG("AT_CMD", "Requested mode %ld", new_mode);
 
-		// On RUI3 V4.1.0 linkcheck is not implemented in the API.
-		if (new_mode == 0)
-		{
-			return AT_PARAM_ERROR;
-		}
-
 		if (new_mode > 2)
 		{
 			return AT_PARAM_ERROR;
@@ -208,7 +202,7 @@ bool init_status_at(void)
 }
 
 /** Regions as text array */
-char *regions_list[] = {"EU433", "CN470", "RU864", "IN865", "EU868", "US915", "AU915", "KR920", "AS923", "AS923-2", "AS923-3", "AS923-4"};
+char *regions_list[] = {"EU433", "CN470", "RU864", "IN865", "EU868", "US915", "AU915", "KR920", "AS923", "AS923-2", "AS923-3", "AS923-4", "LA915"};
 /** Network modes as text array*/
 char *nwm_list[] = {"P2P", "LoRaWAN", "FSK"};
 /** Available test modes as text array */
@@ -288,18 +282,18 @@ int status_handler(SERIAL_PORT port, char *cmd, stParam *param)
 		}
 		else if (nw_mode == 0)
 		{
-			AT_PRINTF("Frequency = %d", api.lorawan.pfreq.get());
-			AT_PRINTF("SF = %d", api.lorawan.psf.get());
-			AT_PRINTF("BW = %d", api.lorawan.pbw.get());
-			AT_PRINTF("CR = %d", api.lorawan.pcr.get());
-			AT_PRINTF("Preamble length = %d", api.lorawan.ppl.get());
-			AT_PRINTF("TX power = %d", api.lorawan.ptp.get());
+			AT_PRINTF("Frequency = %d", api.lora.pfreq.get());
+			AT_PRINTF("SF = %d", api.lora.psf.get());
+			AT_PRINTF("BW = %d", api.lora.pbw.get());
+			AT_PRINTF("CR = %d", api.lora.pcr.get());
+			AT_PRINTF("Preamble length = %d", api.lora.ppl.get());
+			AT_PRINTF("TX power = %d", api.lora.ptp.get());
 		}
 		else
 		{
-			AT_PRINTF("Frequency = %d", api.lorawan.pfreq.get());
-			AT_PRINTF("Bitrate = %d", api.lorawan.pbr.get());
-			AT_PRINTF("Deviaton = %d", api.lorawan.pfdev.get());
+			AT_PRINTF("Frequency = %d", api.lora.pfreq.get());
+			AT_PRINTF("Bitrate = %d", api.lora.pbr.get());
+			AT_PRINTF("Deviaton = %d", api.lora.pfdev.get());
 		}
 	}
 	else
@@ -331,17 +325,16 @@ bool get_at_setting(void)
 	{
 		MYLOG("AT_CMD", "No valid settings found, set to default, read 0X%08X", temp_params.send_interval);
 		g_custom_parameters.send_interval = 0;
-		g_custom_parameters.test_mode = 1;
+		g_custom_parameters.test_mode = 0;
 		save_at_setting();
 		return false;
 	}
 	g_custom_parameters.send_interval = temp_params.send_interval;
 
-	// On RUI3 V4.1.0 linkcheck is not implemented in the API.
-	if ((temp_params.test_mode > 2) || (temp_params.test_mode == 0))
+	if (temp_params.test_mode > 2)
 	{
 		MYLOG("AT_CMD", "Invalid test mode found %d", temp_params.test_mode);
-		g_custom_parameters.test_mode = 1;
+		g_custom_parameters.test_mode = 0;
 		save_at_setting();
 	}
 	else

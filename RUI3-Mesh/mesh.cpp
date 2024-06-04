@@ -281,15 +281,15 @@ void mesh_task(void *unused)
 
 						lora_state = MESH_TX;
 
-						// api.lorawan.precv(0);
+						// api.lora.precv(0);
 						// Send packet over LoRa
-						if (api.lorawan.psend(tx_buff_len, (uint8_t *)&tx_pckg, true))
+						if (api.lora.psend(tx_buff_len, (uint8_t *)&tx_pckg, true))
 						{
 							MYLOG("MESH", "Packet enqueued");
 						}
 						else
 						{
-							// api.lorawan.precv(65535);
+							// api.lora.precv(65535);
 							MYLOG("MESH", "+EVT:SEND_ERROR");
 						}
 					}

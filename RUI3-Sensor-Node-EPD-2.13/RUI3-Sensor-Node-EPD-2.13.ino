@@ -259,7 +259,7 @@ void loop()
  */
 void send_packet(void)
 {
-	if (api.lorawan.nwm.get() == 1)
+	if (api.lora.nwm.get() == 1)
 	{
 		// MYLOG("UPLINK", "Send packet with size %d", g_solution_data.getSize());
 
@@ -283,7 +283,7 @@ void send_packet(void)
 
 		digitalWrite(LED_BLUE, LOW);
 
-		if (api.lorawan.psend(g_solution_data.getSize(), g_solution_data.getBuffer()))
+		if (api.lora.psend(g_solution_data.getSize(), g_solution_data.getBuffer()))
 		{
 			MYLOG("UPLINK", "Packet enqueued");
 		}
