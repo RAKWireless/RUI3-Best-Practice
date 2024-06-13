@@ -4,9 +4,9 @@
  * @brief Defines, includes, global definitions
  * @version 0.1
  * @date 2023-05-04
- * 
+ *
  * @copyright Copyright (c) 2023
- * 
+ *
  */
 #include <Arduino.h>
 #include "wisblock_cayenne.h"
@@ -18,6 +18,7 @@
 #endif
 
 #if MY_DEBUG > 0
+#if defined(_VARIANT_RAK3172_) || defined(_VARIANT_RAK3172_SIP_)
 #define MYLOG(tag, ...)                  \
 	do                                   \
 	{                                    \
@@ -27,6 +28,19 @@
 		Serial.printf("\n");             \
 	} while (0);                         \
 	delay(100)
+#else // RAK4630 || RAK11720
+#define MYLOG(tag, ...)                  \
+	do                                   \
+	{                                    \
+		if (tag)                         \
+			Serial.printf("[%s] ", tag); \
+		Serial.printf(__VA_ARGS__);      \
+		Serial.printf("\r\n");           \
+		Serial6.printf(__VA_ARGS__);     \
+		Serial6.printf("\r\n");          \
+	} while (0);                         \
+	delay(100)
+#endif
 #else
 #define MYLOG(...)
 #endif
