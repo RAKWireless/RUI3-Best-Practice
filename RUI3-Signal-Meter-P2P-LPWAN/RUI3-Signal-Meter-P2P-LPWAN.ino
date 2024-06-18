@@ -52,7 +52,7 @@ void send_packet(void *data)
 	{
 		MYLOG("APP", "Send packet");
 		uint8_t payload[4] = {0x01, 0x02, 0x03, 0x04};
-		
+
 		// Always send confirmed packet to make sure a reply is received
 		api.lorawan.send(4, payload, 2, true, 8);
 	}
@@ -128,8 +128,48 @@ void handle_display(void *reason)
 				rak1921_write_line(2, 0, line_str);
 				sprintf(line_str, "SF %d", api.lora.psf.get());
 				rak1921_write_line(3, 0, line_str);
-				sprintf(line_str, "BW %d", (api.lora.pbw.get() + 1) * 125);
+				// 0 = 125, 1 = 250, 2 = 500, 3 = 7.8, 4 = 10.4, 5 = 15.63, 6 = 20.83, 7 = 31.25, 8 = 41.67, 9 = 62.5
+				char bw_str[7];
+				switch (api.lora.pbw.get())
+				{
+				case 0:
+					sprintf(bw_str, "125");
+					break;
+				case 1:
+					sprintf(bw_str, "250");
+					break;
+				case 2:
+					sprintf(bw_str, "500");
+					break;
+				case 3:
+					sprintf(bw_str, "7.8");
+					break;
+				case 4:
+					sprintf(bw_str, "10.4");
+					break;
+				case 5:
+					sprintf(bw_str, "15.63");
+					break;
+				case 6:
+					sprintf(bw_str, "20.83");
+					break;
+				case 7:
+					sprintf(bw_str, "31.25");
+					break;
+				case 8:
+					sprintf(bw_str, "41.67");
+					break;
+				case 9:
+					sprintf(bw_str, "62.5");
+					break;
+				default:
+					sprintf(bw_str, "???");
+					break;
+				}
+				sprintf(line_str, "BW %s", bw_str);
 				rak1921_write_line(3, 64, line_str);
+				sprintf(line_str, "CR 4/%d", api.lora.pcr.get()+5);
+				rak1921_write_line(2, 64, line_str);
 				sprintf(line_str, "RSSI %d", last_rssi);
 				rak1921_write_line(4, 0, line_str);
 				sprintf(line_str, "SNR %d", last_snr);
@@ -540,13 +580,13 @@ void setup(void)
 			rak1921_display();
 		}
 	case MODE_LINKCHECK:
-	set_linkcheck();
+		set_linkcheck();
 		break;
 	case MODE_CFM:
-	set_cfm();
+		set_cfm();
 		break;
 	case MODE_P2P:
-	set_p2p();
+		set_p2p();
 		break;
 	}
 
@@ -588,7 +628,7 @@ void loop(void)
 
 /**
  * @brief Set the module for LoRaWAN Confirmed Packet testing
- * 
+ *
  */
 void set_cfm(void)
 {
