@@ -126,6 +126,15 @@ RUI3 code example for the [WisBlock Kit 1](https://store.rakwireless.com/product
 ## [RUI3-WisBlock-Kit-4](./RUI3-WisBlock-Kit-4)
 RUI3 code example for the [WisBlock Kit 4](https://store.rakwireless.com/products/wisblock-kit-4-air-quality-monitor) which uses the RAK1906 (temperature, humidity and barometric pressure) sensor. Ideal if the Kit 4 is changed to use RUI3 for lower the power consumption, specially if the RAK4631 is replaced with a RAK3372 WisBlock Core Module (RAK3172).    
 
+## [RUI3 GNSS Location](./RUI3-GNSS)
+RUI3 code example for an I2C or serial connected GNSS module based on u-blox MAX-7Q (RAK1910) or u-blox ZOE-M8Q (RAK12500).    
+Then it starts a location acquisition in the time interval set with ATC+SENDINT. It will try to get a location in 1/2 the time of the acquisition time.     
+If a location was aquired, it will send the location in Cayenne LPP format over LoRaWAN or LoRa P2P. If no location was found, it will send only the battery voltage.     
+
+This library is tested with u-blox MAX-7Q (RAK1910) and u-blox ZOE-M8Q (RAK12500).
+It uses Sparkfun libraries over I2C (RAK12500) or Serial (RAK1910) and UBX messages, which are shorter than NMEA messages and reduce the communication effort.    
+For the u-blox MAX-7Q (RAK1910) an adapted version of the Sparkfun library is used.
+
 ----
 
 # Get RUI3 devices

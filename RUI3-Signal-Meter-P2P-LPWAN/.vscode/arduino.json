@@ -3,7 +3,7 @@
     "board": "rak_rui:stm32:WisDuoRAK3172EvaluationBoard",
     "output": "build",
     "sketch": "RUI3-Signal-Meter-P2P-LPWAN.ino",
-    "port": "COM24",
+    "port": "COM20",
     "postbuild": "python rename.py",
     "buildPreferences": [
         [
