@@ -55,7 +55,7 @@ extern WisCayenne g_solution_data;
 #define LPP_CHANNEL_GPS 10			// RAK1910/RAK12500
 #define LPP_CHANNEL_GPS_ACCURACY 11 // RAK1910/RAK12500
 #define LPP_CHANNEL_GPS_SAT 12		// RAK1910/RAK12500
-
+#define LPP_CHANNEL_GPS_FIX 13		// RAK1910/RAK12500
 // GNSS functions
 // GNSS functions
 #define NO_GNSS_INIT 0

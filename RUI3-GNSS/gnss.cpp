@@ -11,7 +11,7 @@
 #include "app.h"
 
 #include "SparkFun_Ublox_Arduino_Library_Series_6_7.h" // Included in Source Code
-#include <SparkFun_u-blox_GNSS_Arduino_Library.h> // Click here to get the library: http://librarymanager/All#SparkFun_u-blox_GNSS
+#include <SparkFun_u-blox_GNSS_Arduino_Library.h>	   // Click here to get the library: http://librarymanager/All#SparkFun_u-blox_GNSS
 
 // /** Instance for RAK1910 GNSS sensor */
 SFE_UBLOX_GNSS_M7 my_rak1910_gnss;
@@ -29,9 +29,6 @@ bool poll_gnss(void);
 
 /** Flag if location was found */
 volatile bool last_read_ok = false;
-
-/** Flag if GNSS is serial or I2C */
-bool i2c_gnss = false;
 
 /** The GPS module to use */
 uint8_t g_gnss_option = 0;
@@ -57,13 +54,10 @@ bool init_gnss(void)
 		if (!my_gnss.begin(Wire))
 		{
 			MYLOG("GNSS", "RAK12500 fail");
-			i2c_gnss = false;
 		}
 		else
 		{
-			i2c_gnss = true;
 			MYLOG("GNSS", "RAK12500 ok");
-			i2c_gnss = true;
 			my_gnss.setI2COutput(COM_TYPE_UBX_M7); // Set the I2C port to output UBX only (turn off NMEA noise)
 			g_gnss_option = RAK12500_GNSS;
 
@@ -81,13 +75,10 @@ bool init_gnss(void)
 		if (!my_rak1910_gnss.begin(Serial1))
 		{
 			MYLOG("GNSS", "RAK1910 fail");
-			i2c_gnss = false;
 		}
 		else
 		{
-			i2c_gnss = true;
 			MYLOG("GNSS", "RAK1910 ok");
-			i2c_gnss = true;
 			if (!my_rak1910_gnss.setUART1Output(COM_TYPE_UBX_M7)) // Set the UART port to output UBX only (turn off NMEA noise)
 			{
 				MYLOG("GNSS", "Can't force UBX");
@@ -153,12 +144,13 @@ bool poll_gnss(void)
 
 	bool has_pos = false;
 	bool has_alt = false;
+	byte fix_type;
 
 	if (g_gnss_option == RAK12500_GNSS)
 	{
 		if (my_gnss.getGnssFixOk())
 		{
-			byte fix_type = my_gnss.getFixType(); // Get the fix type
+			fix_type = my_gnss.getFixType(); // Get the fix type
 			char fix_type_str[32] = {0};
 			if (fix_type == 0)
 				sprintf(fix_type_str, "No Fix");
@@ -173,15 +165,15 @@ bool poll_gnss(void)
 			else if (fix_type == 5)
 				sprintf(fix_type_str, "Time fix");
 
-			if ((fix_type >= 3) && (my_gnss.getSIV() >= 5)) /** Fix type 3D and at least 5 satellites */
-															// if (fix_type >= 3) /** Fix type 3D */
+			satellites = my_gnss.getSIV();
+			if ((fix_type >= 3) && (satellites >= 5)) /** Fix type 3D and at least 5 satellites */
+													  // if (fix_type >= 3) /** Fix type 3D */
 			{
 				last_read_ok = true;
 				latitude = my_gnss.getLatitude();
 				longitude = my_gnss.getLongitude();
 				altitude = my_gnss.getAltitude();
 				accuracy = my_gnss.getHorizontalDOP();
-				satellites = my_gnss.getSIV();
 
 				// MYLOG("GNSS", "Fixtype: %d %s", my_gnss.getFixType(), fix_type_str);
 				// MYLOG("GNSS", "Lat: %.4f Lon: %.4f", latitude / 10000000.0, longitude / 10000000.0);
@@ -194,7 +186,7 @@ bool poll_gnss(void)
 	{
 		// if (my_rak1910_gnss.getGnssFixOk())
 		{
-			byte fix_type = my_rak1910_gnss.getFixType(); // Get the fix type
+			fix_type = my_rak1910_gnss.getFixType(); // Get the fix type
 			char fix_type_str[32] = {0};
 			if (fix_type == 0)
 				sprintf(fix_type_str, "No Fix");
@@ -209,15 +201,16 @@ bool poll_gnss(void)
 			else if (fix_type == 5)
 				sprintf(fix_type_str, "Time fix");
 
-			if ((fix_type >= 3) && (my_rak1910_gnss.getSIV() >= 5)) /** Fix type 3D and at least 5 satellites */
-																	// if (fix_type >= 3) /** Fix type 3D */
+			satellites = my_rak1910_gnss.getSIV();
+			if ((fix_type >= 3) && (satellites >= 5)) /** Fix type 3D and at least 5 satellites */
+													  // if (fix_type >= 3) /** Fix type 3D */
 			{
 				last_read_ok = true;
 				latitude = my_rak1910_gnss.getLatitude();
 				longitude = my_rak1910_gnss.getLongitude();
 				altitude = my_rak1910_gnss.getAltitude();
 				accuracy = my_rak1910_gnss.getPDOP();
-				satellites = my_rak1910_gnss.getSIV();
+				
 
 				// MYLOG("GNSS", "Fixtype: %d %s", my_rak1910_gnss.getFixType(), fix_type_str);
 				// MYLOG("GNSS", "Lat: %.4f Lon: %.4f", latitude / 10000000.0, longitude / 10000000.0);
@@ -239,6 +232,7 @@ bool poll_gnss(void)
 		g_solution_data.addGNSS_6(LPP_CHANNEL_GPS, latitude, longitude, altitude);
 		g_solution_data.addDigitalInput(LPP_CHANNEL_GPS_ACCURACY, accuracy);
 		g_solution_data.addDigitalInput(LPP_CHANNEL_GPS_SAT, satellites);
+		g_solution_data.addDigitalInput(LPP_CHANNEL_GPS_FIX, fix_type);
 
 		return true;
 	}
