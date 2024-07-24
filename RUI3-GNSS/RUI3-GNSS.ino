@@ -100,7 +100,6 @@ void timeReqCallback(int32_t status)
 	if (status == GET_DEVICE_TIME_OK)
 	{
 		MYLOG("TREQ", "Get device time success");
-		char time[255];
 	}
 	else if (status == GET_DEVICE_TIME_FAIL)
 	{
@@ -270,26 +269,25 @@ void setup()
 		// api.lorawan.linkcheck.set(2);
 
 		// Enable Timerequest
-		api.lorawan.timereq.set(1);
+		// api.lorawan.timereq.set(1);
+
+		// if (api.lorawan.nwm.get() == 1)
+		// {
+		// 	if (g_confirmed_mode)
+		// 	{
+		// 		MYLOG("SETUP", "Confirmed enabled");
+		// 	}
+		// 	else
+		// 	{
+		// 		MYLOG("SETUP", "Confirmed disabled");
+		// }
+
+		// 	MYLOG("SETUP", "Retry = %d", g_confirmed_retry);
+
+		// 	MYLOG("SETUP", "DR = %d", g_data_rate);
+
+		// 	MYLOG("SETUP", "LINKCHECK = %d", g_linkcheck);
 	}
-
-	// if (api.lorawan.nwm.get() == 1)
-	// {
-	// 	if (g_confirmed_mode)
-	// 	{
-	// 		MYLOG("SETUP", "Confirmed enabled");
-	// 	}
-	// 	else
-	// 	{
-	// 		MYLOG("SETUP", "Confirmed disabled");
-	// 	}
-
-	// 	MYLOG("SETUP", "Retry = %d", g_confirmed_retry);
-
-	// 	MYLOG("SETUP", "DR = %d", g_data_rate);
-
-	// 	MYLOG("SETUP", "LINKCHECK = %d", g_linkcheck);
-	// }
 
 	// Enable low power mode
 	api.system.lpm.set(1);
@@ -446,9 +444,6 @@ void send_packet(void)
 	// Check if it is LoRaWAN
 	if (api.lorawan.nwm.get() == 1)
 	{
-		// Enable Timerequest
-		api.lorawan.timereq.set(1);
-
 		// Send the packet
 		if (api.lorawan.send(g_solution_data.getSize(), g_solution_data.getBuffer(), set_fPort, g_confirmed_mode, g_confirmed_retry))
 		{

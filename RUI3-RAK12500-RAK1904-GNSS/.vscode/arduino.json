@@ -1,7 +1,7 @@
 {
-    "board": "rak_rui:nrf52:WisCoreRAK4631Board",
+    "board": "rak_rui:stm32:WisDuoRAK3172EvaluationBoard",
     "port": "COM73",
     "output": "build",
     "sketch": "RUI3-RAK12500-RAK1904-GNSS.ino",
-    "configuration": "softdevice=s140v6,debug=l0,supportnfc=1,supportat=1,supportlora=1,supportAS923=1,supportAU915=1,supportCN470=2,supportCN779=2,supportEU433=2,supportEU868=1,supportKR920=1,supportIN865=1,supportUS915=1,supportRU864=1,supportLA915=1"
+    "configuration": "debug=l0,supportat=1,supportlora=1,supportAS923=1,supportAU915=2,supportCN470=2,supportCN779=2,supportEU433=2,supportEU868=2,supportKR920=2,supportIN865=2,supportUS915=2,supportRU864=2,supportLA915=2"
 }

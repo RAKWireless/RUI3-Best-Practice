@@ -94,8 +94,9 @@ bool init_gnss(void)
 		Serial1.end();
 		return false;
 	}
-	else
+	else // Already searched and found GNSS module
 	{
+		// RAK12500 module
 		if (g_gnss_option == RAK12500_GNSS)
 		{
 			my_gnss.begin(Wire);
@@ -106,6 +107,7 @@ bool init_gnss(void)
 
 			my_gnss.setMeasurementRate(500);
 		}
+		// RAK1910 module
 		else
 		{
 			Serial1.begin(9600);
@@ -146,6 +148,7 @@ bool poll_gnss(void)
 	bool has_alt = false;
 	byte fix_type;
 
+	// RAK12500 module
 	if (g_gnss_option == RAK12500_GNSS)
 	{
 		if (my_gnss.getGnssFixOk())
@@ -179,9 +182,11 @@ bool poll_gnss(void)
 				// MYLOG("GNSS", "Lat: %.4f Lon: %.4f", latitude / 10000000.0, longitude / 10000000.0);
 				// MYLOG("GNSS", "Alt: %.2f", altitude / 1000.0);
 				// MYLOG("GNSS", "Acy: %.2f ", accuracy / 100.0);
+				// MYLOG("GNSS", "Sat: %d ", satellites);
 			}
 		}
 	}
+	// RAK1910 module
 	else
 	{
 		// if (my_rak1910_gnss.getGnssFixOk())
@@ -210,12 +215,12 @@ bool poll_gnss(void)
 				longitude = my_rak1910_gnss.getLongitude();
 				altitude = my_rak1910_gnss.getAltitude();
 				accuracy = my_rak1910_gnss.getPDOP();
-				
 
 				// MYLOG("GNSS", "Fixtype: %d %s", my_rak1910_gnss.getFixType(), fix_type_str);
 				// MYLOG("GNSS", "Lat: %.4f Lon: %.4f", latitude / 10000000.0, longitude / 10000000.0);
 				// MYLOG("GNSS", "Alt: %.2f", altitude / 1000.0);
 				// MYLOG("GNSS", "Acy: %.2f ", accuracy / 100.0);
+				// MYLOG("GNSS", "Sat: %d ", satellites);
 			}
 		}
 	}

@@ -57,3 +57,22 @@ uint8_t get_min_dr(uint16_t region, uint16_t payload_size)
 	// No matching datarate for the payload size found
 	return 16;
 }
+
+// void get_min_max_dr(uint16_t region, uint8_t *min_dr, uint8_t *max_dr)
+// {
+// 	uint16_t *region_ps = region_map[region];
+// 	for (uint8_t idx = 0; idx < 16; idx++)
+// 	{
+// 		if (region_ps[idx] != 0)
+// 		{
+// 			min_dr = idx;
+// 		}
+// 	}
+// 	for (uint8_t idx = 15; idx >= 0; idx++)
+// 	{
+// 		if (region_ps[idx] != 0)
+// 		{
+// 			max_dr = idx;
+// 		}
+// 	}
+// }
