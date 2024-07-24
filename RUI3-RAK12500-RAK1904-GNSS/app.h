@@ -19,6 +19,21 @@
 #define MY_DEBUG 1
 #endif
 
+#if defined(_VARIANT_RAK3172_) || defined(_VARIANT_RAK3172_SIP_)
+#if MY_DEBUG > 0
+#define MYLOG(tag, ...)                   \
+	do                                    \
+	{                                     \
+		if (tag)                          \
+			Serial.printf("[%s] ", tag);  \
+		Serial.printf(__VA_ARGS__);       \
+		Serial.printf("\n");              \
+	} while (0);                          \
+	delay(100)
+#else
+#define MYLOG(...)
+#endif
+#else
 #if MY_DEBUG > 0
 #define MYLOG(tag, ...)                  \
 	do                                   \
@@ -35,6 +50,7 @@
 	delay(100)
 #else
 #define MYLOG(...)
+#endif
 #endif
 
 /** Custom flash parameters structure */
