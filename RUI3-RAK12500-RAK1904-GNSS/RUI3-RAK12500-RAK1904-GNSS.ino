@@ -187,7 +187,7 @@ void setup()
 	// Delay for 5 seconds to give the chance for AT+BOOT
 	delay(5000);
 
-	api.system.firmwareVersion.set("RUI3-Location-Tracker-V1.0.0");
+	api.system.firmwareVersion.set("1.0.1-rc1");
 
 	Serial.println("RAKwireless RUI3 Location Tracker");
 	Serial.println("------------------------------------------------------");
