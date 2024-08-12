@@ -233,6 +233,21 @@ void setup()
 	// Create a timer.
 	api.system.timer.create(RAK_TIMER_1, gnss_handler, RAK_TIMER_PERIODIC);
 
+	// Check min send interval, if too small, set to send interval - 10 seconds
+	if (custom_parameters.min_interval < 10000)
+	{
+		if (custom_parameters.send_interval != 0)
+		{
+			custom_parameters.min_interval = custom_parameters.send_interval - 1000;
+		}
+		else
+		{
+			custom_parameters.min_interval = 10000;
+		}
+		// Save custom settings
+		save_at_setting();
+	}
+
 	MYLOG("SETUP", "Create timer for interrupt handler");
 	// Create a timer
 	api.system.timer.create(RAK_TIMER_2, sensor_handler, RAK_TIMER_ONESHOT);
@@ -329,7 +344,7 @@ void sensor_handler(void *)
 		// Startup GNSS module
 		init_gnss();
 		check_gnss_counter = 0;
-		// Max location aquisition time is minimal interval // was half of min interval
+
 		check_gnss_max_try = custom_parameters.min_interval / 2500; // / 2 / 2500;
 		gnss_start = millis();
 		// Start the timer
@@ -378,7 +393,7 @@ void send_packet(void)
 	{
 		// Check DR
 		uint8_t new_dr = get_min_dr(api.lorawan.band.get(), g_solution_data.getSize());
-		if (new_dr != api.lorawan.dr.get())
+		if (new_dr > api.lorawan.dr.get())
 		{
 			api.lorawan.dr.set(new_dr);
 			MYLOG("UPLINK", "Datarate changed to %d", api.lorawan.dr.get());

@@ -19,24 +19,21 @@
 #define MY_DEBUG 1
 #endif
 
-#ifndef USE_GNSS6_ACCURACY
-#define USE_GNSS6_ACCURACY 0
+#if defined(_VARIANT_RAK3172_) || defined(_VARIANT_RAK3172_SIP_)
+#if MY_DEBUG > 0
+#define MYLOG(tag, ...)                   \
+	do                                    \
+	{                                     \
+		if (tag)                          \
+			Serial.printf("[%s] ", tag);  \
+		Serial.printf(__VA_ARGS__);       \
+		Serial.printf("\n");              \
+	} while (0);                          \
+	delay(100)
 #else
-#define USE_GNSS6_ACCURACY 1
+#define MYLOG(...)
 #endif
-
-#ifndef ADD_UNIX_TIMESTAMP
-#define ADD_UNIX_TIMESTAMP 0
 #else
-#define ADD_UNIX_TIMESTAMP 1
-#endif
-
-#ifndef ADD_BATTERY_VOLTAGE
-#define ADD_BATTERY_VOLTAGE 0
-#else
-#define ADD_BATTERY_VOLTAGE 1
-#endif
-
 #if MY_DEBUG > 0
 #define MYLOG(tag, ...)                  \
 	do                                   \

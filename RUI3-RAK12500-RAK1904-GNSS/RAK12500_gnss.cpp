@@ -64,9 +64,16 @@ bool init_gnss(void)
 
 	my_gnss.setI2COutput(COM_TYPE_UBX); // Set the I2C port to output UBX only (turn off NMEA noise)
 
-	my_gnss.saveConfiguration(); // Save the current settings to flash and BBR
-
+	my_gnss.enableGNSS(true, SFE_UBLOX_GNSS_ID_GPS);
+	my_gnss.enableGNSS(true, SFE_UBLOX_GNSS_ID_GALILEO);
+	my_gnss.enableGNSS(true, SFE_UBLOX_GNSS_ID_GLONASS);
+	my_gnss.enableGNSS(true, SFE_UBLOX_GNSS_ID_SBAS);
+	my_gnss.enableGNSS(true, SFE_UBLOX_GNSS_ID_BEIDOU);
+	my_gnss.enableGNSS(true, SFE_UBLOX_GNSS_ID_IMES);
+	my_gnss.enableGNSS(true, SFE_UBLOX_GNSS_ID_QZSS);
 	my_gnss.setMeasurementRate(500);
+
+	my_gnss.saveConfiguration(); // Save the current settings to flash and BBR
 
 	return true;
 }
