@@ -19,6 +19,24 @@
 #define MY_DEBUG 1
 #endif
 
+#ifndef USE_GNSS6_ACCURACY
+#define USE_GNSS6_ACCURACY 0
+#else
+#define USE_GNSS6_ACCURACY 1
+#endif
+
+#ifndef ADD_UNIX_TIMESTAMP
+#define ADD_UNIX_TIMESTAMP 0
+#else
+#define ADD_UNIX_TIMESTAMP 1
+#endif
+
+#ifndef ADD_BATTERY_VOLTAGE
+#define ADD_BATTERY_VOLTAGE 0
+#else
+#define ADD_BATTERY_VOLTAGE 1
+#endif
+
 #if MY_DEBUG > 0
 #define MYLOG(tag, ...)                  \
 	do                                   \

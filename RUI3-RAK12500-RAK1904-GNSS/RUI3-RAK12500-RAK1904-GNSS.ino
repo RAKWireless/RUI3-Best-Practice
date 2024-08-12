@@ -187,7 +187,7 @@ void setup()
 	// Delay for 5 seconds to give the chance for AT+BOOT
 	delay(5000);
 
-	api.system.firmwareVersion.set("1.0.1-rc1");
+	api.system.firmwareVersion.set("1.0.1-rc3");
 
 	Serial.println("RAKwireless RUI3 Location Tracker");
 	Serial.println("------------------------------------------------------");
@@ -320,7 +320,9 @@ void sensor_handler(void *)
 		g_solution_data.reset();
 
 		// Add battery voltage
+#if ADD_BATTERY_VOLTAGE
 		g_solution_data.addVoltage(LPP_CHANNEL_BATT, api.system.bat.get());
+#endif
 
 		// Set flag for GNSS active to avoid retrigger */
 		gnss_active = true;
@@ -367,7 +369,9 @@ void send_packet(void)
 	last_trigger = millis();
 
 	// Add acquisition time in seconds
+#if ADD_UNIX_TIMESTAMP
 	g_solution_data.addUnixTime(LPP_CHANNEL_GPS, (gnss_finished - gnss_start) / 1000);
+#endif
 
 	// Check if it is LoRaWAN
 	if (api.lorawan.nwm.get() == 1)

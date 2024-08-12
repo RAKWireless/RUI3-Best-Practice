@@ -176,8 +176,15 @@ bool poll_gnss(void)
 		}
 
 		// Add the location to the payload
+#if USE_GNSS6_ACCURACY
 		g_solution_data.addGNSS_6(LPP_CHANNEL_GPS, latitude, longitude, altitude);
+#else
+        g_solution_data.addGNSS_4(LPP_CHANNEL_GPS, latitude, longitude, altitude);
+#endif
+
+#if ADD_UNIX_TIMESTAMP
 		g_solution_data.addUnixTime(LPP_CHANNEL_TIME, unix_time);
+#endif
 		return true;
 	}
 	else
@@ -192,8 +199,15 @@ bool poll_gnss(void)
 		accuracy = 1;
 		satellites = 18;
 
+#if USE_GNSS6_ACCURACY
 		g_solution_data.addGNSS_6(LPP_CHANNEL_GPS, latitude, longitude, altitude);
+#else
+		g_solution_data.addGNSS_4(LPP_CHANNEL_GPS, latitude, longitude, altitude);
+#endif
+
+#if ADD_UNIX_TIMESTAMP
 		g_solution_data.addUnixTime(LPP_CHANNEL_TIME, millis() / 1000);
+#endif
 		last_read_ok = true;
 		return true;
 #endif
