@@ -51,6 +51,7 @@
 #else
 #define MYLOG(...)
 #endif
+#endif
 
 /** Custom flash parameters structure */
 struct custom_param_s

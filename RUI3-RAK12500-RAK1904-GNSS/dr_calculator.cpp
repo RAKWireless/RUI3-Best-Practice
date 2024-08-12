@@ -48,7 +48,7 @@ uint8_t get_min_dr(uint16_t region, uint16_t payload_size)
 	for (uint8_t idx = 0; idx < 16; idx++)
 	{
 		// Check if dr payload size is larger than requested payload size
-		if (payload_size < region_ps[idx])
+		if (payload_size <= region_ps[idx])
 		{
 			// Found a datarate that can carry the payload size
 			return idx;
