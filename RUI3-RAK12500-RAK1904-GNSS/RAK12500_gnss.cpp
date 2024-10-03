@@ -165,7 +165,7 @@ bool poll_gnss(void)
 			altitude = my_gnss.getAltitude();
 			accuracy = my_gnss.getHorizontalDOP();
 			satellites = my_gnss.getSIV();
-			unix_time = my_gnss.getUnixEpoch();
+			// unix_time = my_gnss.getUnixEpoch();
 			// MYLOG("GNSS", "Fixtype: %d %s", my_gnss.getFixType(), fix_type_str);
 			// MYLOG("GNSS", "Lat: %.4f Lon: %.4f", latitude / 10000000.0, longitude / 10000000.0);
 			// MYLOG("GNSS", "Alt: %.2f", altitude / 1000.0);
@@ -184,7 +184,7 @@ bool poll_gnss(void)
 
 		// Add the location to the payload
 		g_solution_data.addGNSS_6(LPP_CHANNEL_GPS, latitude, longitude, altitude);
-		g_solution_data.addUnixTime(LPP_CHANNEL_TIME, unix_time);
+		// g_solution_data.addUnixTime(LPP_CHANNEL_TIME, unix_time);
 		return true;
 	}
 	else

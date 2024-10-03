@@ -6,5 +6,5 @@
     "version": "1.0.1",
     "project": "RUI3-Low-Power",
     "sketch": "RUI3-GNSS.ino",
-    "port": "COM4"
+    "port": "COM3"
 }

@@ -154,6 +154,19 @@ void setup()
 	MYLOG("SETUP", "RAK RUI3 Sensor Node");
 	MYLOG("SETUP", "Setup the device with AT commands first");
 
+	if (has_1906)
+	{
+		MYLOG("SETUP", "RAK1906 available");
+	}
+	if (has_1903)
+	{
+		MYLOG("SETUP", "RAK1903 available");
+	}
+	if (has_12010)
+	{
+		MYLOG("SETUP", "RAK12010 available");
+	}
+
 	// Get saved sending frequency from flash
 	get_at_setting();
 

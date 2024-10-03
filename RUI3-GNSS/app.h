@@ -14,7 +14,7 @@
 // Debug
 // Debug output set to 0 to disable app debug output
 #ifndef MY_DEBUG
-#define MY_DEBUG 0
+#define MY_DEBUG 1
 #endif
 
 #if MY_DEBUG > 0

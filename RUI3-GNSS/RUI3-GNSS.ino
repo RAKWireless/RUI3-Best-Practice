@@ -327,7 +327,7 @@ void gnss_handler(void *)
 		gnss_active = false;
 		delay(100);
 		MYLOG("GNSS", "Got location");
-		digitalWrite(LED_BLUE, HIGH);
+		// digitalWrite(LED_BLUE, HIGH);
 		api.system.timer.stop(RAK_TIMER_1);
 		send_packet();
 	}
@@ -340,7 +340,7 @@ void gnss_handler(void *)
 			delay(100);
 			gnss_active = false;
 			MYLOG("GNSS", "Location timeout");
-			digitalWrite(LED_BLUE, LOW);
+			// digitalWrite(LED_BLUE, LOW);
 			api.system.timer.stop(RAK_TIMER_1);
 			send_packet();
 		}
@@ -375,7 +375,16 @@ void sensor_handler(void *)
 
 	// Create payload
 	// Add battery voltage
-	g_solution_data.addVoltage(LPP_CHANNEL_BATT, api.system.bat.get());
+	float coll_v = api.system.bat.get();
+	coll_v = 0.0;
+	for (int reading = 0; reading < 10; reading ++)
+	{
+		coll_v += api.system.bat.get();
+	}
+
+	coll_v = coll_v / 10;
+
+	g_solution_data.addVoltage(LPP_CHANNEL_BATT, coll_v);
 
 	// If it is a GNSS location tracker, start the timer to aquire the location
 	if (has_gnss && !gnss_active)
@@ -385,7 +394,8 @@ void sensor_handler(void *)
 		// Set flag for GNSS active to avoid retrigger */
 		gnss_active = true;
 		// Startup GNSS module
-		init_gnss();
+		// init_gnss();
+
 		check_gnss_counter = 0;
 		// Set location acquisition time
 		if (custom_parameters.send_interval < 30000)
@@ -417,8 +427,8 @@ void sensor_handler(void *)
  */
 void loop()
 {
-	api.system.sleep.all();
-	// api.system.scheduler.task.destroy();
+	// api.system.sleep.all();
+	api.system.scheduler.task.destroy();
 }
 
 /**
