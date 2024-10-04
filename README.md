@@ -108,7 +108,7 @@ A control application that changes the status of a relay depending on a received
 
 ## [RUI3 Modbus Master example](./ModBus)     
 This example is a simple Modbus Master that reads sensor values from a Modbus Slave. For easy testing a Modbus Slave application is available for another WisBlock/WisDuo based module with a temperature, humidity and barometric pressure sensor.    
-_**⚠️ INFORMATION**_  
+_**⚠️ INFORMATION**_      
 This example uses a modified version of the [Modbus-Master-Slave-for-Arduino](https://github.com/smarmengol/Modbus-Master-Slave-for-Arduino) library. This library was choosen because of its small code size. However, due to some incompatible definitions, it did not compile with RUI3. The library was slightly modified to work with RUI3 and is included as project files _**`RUI3_ModbusRtu.cpp`**_ and _**`RUI3_ModbusRtu.h`**_.    
 The original libray is licensed under the [GNU LESSER GENERAL PUBLIC LICENSE Version 2.1](https://github.com/smarmengol/Modbus-Master-Slave-for-Arduino/blob/master/LICENSE.md)
 
@@ -134,6 +134,13 @@ If a location was aquired, it will send the location in Cayenne LPP format over 
 This library is tested with u-blox MAX-7Q (RAK1910) and u-blox ZOE-M8Q (RAK12500).
 It uses Sparkfun libraries over I2C (RAK12500) or Serial (RAK1910) and UBX messages, which are shorter than NMEA messages and reduce the communication effort.    
 For the u-blox MAX-7Q (RAK1910) an adapted version of the Sparkfun library is used.
+
+## [RUI3 RAK3172 DS18B20 OneWire Sensor](./RUI3-RAK3172-OneWire)
+RUI3 had at the time of release timing problems with OneWire communications. This example code uses a changed open source library [GyverDS18](https://github.com/GyverLibs/GyverDS18) provided by Alex Gyver for the communication.     
+The example reads the sensor ID and the sensor values in an interval that can be setup with _**`ATC+SENDINT`**_. It sends the sensor values in Cayenne LPP packet format over LoRaWAN or LoRa P2P.    
+
+_**⚠️ INFORMATION**_      
+This example works only with the RAK3172 modules. It is not compatible with the RAK4630 or RAK11720.    
 
 ----
 
