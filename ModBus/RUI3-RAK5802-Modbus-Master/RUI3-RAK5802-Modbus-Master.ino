@@ -160,17 +160,17 @@ void recv_cb(rui_lora_p2p_recv_t data)
 	Serial.print("\r\n");
 
 	// Check for valid command sequence
-	if ((data->Buffer[0] == 0xAA) && (data->Buffer[1] == 0x55))
+	if ((data.Buffer[0] == 0xAA) && (data.Buffer[1] == 0x55))
 	{
 		// Check for command (only MB_FC_WRITE_MULTIPLE_COILS supported atm)
-		if (data->Buffer[2] == MB_FC_WRITE_MULTIPLE_COILS)
+		if (data.Buffer[2] == MB_FC_WRITE_MULTIPLE_COILS)
 		{
 			// Get slave address
-			coil_data.dev_addr = data->Buffer[3];
+			coil_data.dev_addr = data.Buffer[3];
 			if ((coil_data.dev_addr > 0) && (coil_data.dev_addr < 17))
 			{
 				// Get number of coils
-				coil_data.num_coils = data->Buffer[4];
+				coil_data.num_coils = data.Buffer[4];
 
 				// Check for coil number in range (1 to 16)
 				if ((coil_data.num_coils > 0) && (coil_data.num_coils < 17))
@@ -178,7 +178,7 @@ void recv_cb(rui_lora_p2p_recv_t data)
 					// Save coil status
 					for (int idx = 0; idx < coil_data.num_coils; idx++)
 					{
-						coil_data.coils[idx] = data->Buffer[5 + idx];
+						coil_data.coils[idx] = data.Buffer[5 + idx];
 					}
 					// Start a timer to handle the incoming coil write request.
 					api.system.timer.start(RAK_TIMER_1, 100, NULL);

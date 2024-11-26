@@ -15,6 +15,9 @@ Option (1) will require to make sure enough gateways are available to have all s
 Option (2) might not be able to have connectivity of all nodes to each other which might not be feasable. And forwarding the sensor data to the cloud might not be easy to realize as well.        
 Based on this, a LoRa mesh network might be the best solution. Connectivity to the cloud can be implemented in one of the nodes, read on to see a proposal how to do it.
 
+### ⚠️ INFORMATION
+Requires the Queue library from SMFSW ==> https://github.com/SMFSW/Queue
+
 ----
 
 ## Solution
