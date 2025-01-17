@@ -287,7 +287,8 @@ void setup()
 	// Initialize the Modbus interface on Serial1 (connected to RAK5802 RS485 module)
 	pinMode(WB_IO2, OUTPUT);
 	digitalWrite(WB_IO2, HIGH);
-	Serial1.begin(19200); // baud-rate at 19200
+	Serial1.end();
+	Serial1.begin(19200, RAK_CUSTOM_MODE); // baud-rate at 19200
 	master.start();
 	master.setTimeOut(2000); // if there is no answer in 2000 ms, roll over
 

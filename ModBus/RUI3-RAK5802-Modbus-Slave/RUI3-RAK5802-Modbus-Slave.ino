@@ -45,7 +45,8 @@ void setup()
 	pinMode(LED_BLUE, OUTPUT);
 	digitalWrite(LED_BLUE, LOW);
 
-	Serial1.begin(19200); // baud-rate at 19200
+	Serial1.end();
+	Serial1.begin(19200, RAK_CUSTOM_MODE); // baud-rate at 19200
 	slave.start();
 	while (Serial1.available())
 	{

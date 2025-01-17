@@ -119,7 +119,7 @@ uint8_t WisCayenne::addGNSS_6(uint8_t channel, int32_t latitude, int32_t longitu
  * @param battery Device battery voltage in V
  * @return uint8_t bytes added to the data packet
  */
-uint8_t WisCayenne::addGNSS_H(uint32_t latitude, uint32_t longitude, uint16_t altitude, uint16_t accuracy, uint16_t battery)
+uint8_t WisCayenne::addGNSS_H(int32_t latitude, int32_t longitude, int16_t altitude, uint16_t accuracy, uint16_t battery)
 {
 	// check buffer overflow
 	if ((_cursor + LPP_GPSH_SIZE) > _maxsize)

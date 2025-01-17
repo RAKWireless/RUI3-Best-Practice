@@ -302,7 +302,7 @@ void send_packet(void)
 
 		digitalWrite(LED_BLUE, LOW);
 
-		if (api.lora.psend(4, g_solution_data, true))
+		if (api.lora.psend(4, g_solution_data, false))
 		{
 			MYLOG("UPLINK", "Packet enqueued");
 		}

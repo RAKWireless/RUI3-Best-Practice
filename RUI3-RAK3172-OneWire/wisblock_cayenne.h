@@ -32,7 +32,7 @@ public:
 
 	uint8_t addGNSS_4(uint8_t channel, uint32_t latitude, uint32_t longitude, uint32_t altitude);
 	uint8_t addGNSS_6(uint8_t channel, uint32_t latitude, uint32_t longitude, uint32_t altitude);
-	uint8_t addGNSS_H(uint32_t latitude, uint32_t longitude, uint16_t altitude, uint16_t accuracy, uint16_t battery);
+	uint8_t addGNSS_H(int32_t latitude, int32_t longitude, int16_t altitude, uint16_t accuracy, uint16_t battery);
 	uint8_t addVoc_index(uint8_t channel, uint32_t voc_index);
 
 private:
