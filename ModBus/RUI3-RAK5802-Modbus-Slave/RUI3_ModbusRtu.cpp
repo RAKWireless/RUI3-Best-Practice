@@ -525,7 +525,6 @@ int8_t Modbus::poll()
 		break;
 	}
 	u8state = COM_IDLE;
-
 	return u8BufferSize;
 }
 
@@ -659,7 +658,6 @@ int8_t Modbus::getRxBuffer()
 		u16errCnt++;
 		return ERR_BUFF_OVERFLOW;
 	}
-
 	return u8BufferSize;
 }
 
@@ -692,6 +690,8 @@ void Modbus::sendTxBuffer()
 
 	// transfer buffer to serial line
 	port->write(au8Buffer, u8BufferSize);
+	port->flush();
+	port->read();
 
 	if (u8txenpin > 1)
 	{
@@ -706,9 +706,8 @@ void Modbus::sendTxBuffer()
 			;
 		digitalWrite(u8txenpin, LOW);
 	}
-	while (port->read() >= 0)
-		;
-
+	// while (port->read() >= 0)
+	// 	;
 	u8BufferSize = 0;
 
 	// set time-out for master
@@ -1096,7 +1095,6 @@ int8_t Modbus::process_FC15(int16_t *regs, uint8_t /*u8size*/)
 	// read each coil from the register map and put its value inside the outcoming message
 	u8bitsno = 0;
 	u8frameByte = 7;
-
 	for (u16currentCoil = 0; u16currentCoil < u16Coilno; u16currentCoil++)
 	{
 
@@ -1107,10 +1105,12 @@ int8_t Modbus::process_FC15(int16_t *regs, uint8_t /*u8size*/)
 		bTemp = bitRead(
 			au8Buffer[u8frameByte],
 			u8bitsno);
+
 		bitWrite(
 			regs[u8currentRegister],
 			u8currentBit,
 			bTemp);
+
 		u8bitsno++;
 
 		if (u8bitsno > 7)

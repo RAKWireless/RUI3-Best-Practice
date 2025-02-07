@@ -552,7 +552,9 @@ int8_t Modbus::poll(int16_t *regs, uint8_t u8size)
 	u8current = port->available();
 
 	if (u8current == 0)
+	{
 		return 0;
+	}
 
 	// check T35 after frame end or still no frame end
 	if (u8current != u8lastRec)
@@ -562,18 +564,23 @@ int8_t Modbus::poll(int16_t *regs, uint8_t u8size)
 		return 0;
 	}
 	if ((unsigned long)(millis() - u32time) < (unsigned long)T35)
+	{
 		return 0;
+	}
 
 	u8lastRec = 0;
 	int8_t i8state = getRxBuffer();
 	u8lastError = i8state;
 	if (i8state < 7)
+	{
 		return i8state;
+	}
 
 	// check slave id
 	if (au8Buffer[ID] != u8id)
+	{
 		return 0;
-
+	}
 	// validate message: CRC, FCT, address and size
 	uint8_t u8exception = validateRequest();
 	if (u8exception > 0)
@@ -683,6 +690,8 @@ void Modbus::sendTxBuffer()
 
 	// transfer buffer to serial line
 	port->write(au8Buffer, u8BufferSize);
+	port->flush();
+	port->read();
 
 	if (u8txenpin > 1)
 	{
@@ -697,9 +706,8 @@ void Modbus::sendTxBuffer()
 			;
 		digitalWrite(u8txenpin, LOW);
 	}
-	while (port->read() >= 0)
-		;
-
+	// while (port->read() >= 0)
+	// 	;
 	u8BufferSize = 0;
 
 	// set time-out for master

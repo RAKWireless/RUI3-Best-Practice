@@ -288,7 +288,8 @@ void setup()
 
 	// Initialize RAK1904
 	has_rak1904 = init_rak1904();
-
+	MYLOG("SETUP", "RAK1904 %s", has_rak1904 ? "present" : "not present");
+	
 	// Set last trigger time to boot time
 	last_trigger = millis();
 

@@ -356,57 +356,59 @@ void modbus_read_register(void *)
 	time_t start_poll = millis();
 
 	bool data_ready = false;
-	while ((millis() - start_poll) < 5000)
+	while ((millis() - start_poll) < 10000)
 	{
-		master.poll(); // check incoming messages
-		if (master.getState() == COM_IDLE)
+		if (master.poll() != 0) // check incoming messages
 		{
-			if ((coils_n_regs.data[1] == 0) && (coils_n_regs.data[2] == 0) && (coils_n_regs.data[3] == 0) && (coils_n_regs.data[4] == 0))
+			if (master.getState() == COM_IDLE)
 			{
-				MYLOG("MODR", "No data received");
-				break;
-			}
-			else
-			{
-				MYLOG("MODR", "Temperature = %.2f", coils_n_regs.sensor_data.temperature / 100.0);
-				MYLOG("MODR", "Humidity = %.2f", coils_n_regs.sensor_data.humidity / 100.0);
-				MYLOG("MODR", "Barometer = %.1f", coils_n_regs.sensor_data.pressure / 10.0);
-				MYLOG("MODR", "Battery = %.2f", coils_n_regs.sensor_data.battery / 100.0);
-
-				data_ready = true;
-
-				// Clear payload
-				g_solution_data.reset();
-
-				if (coils_n_regs.sensor_data.temperature != 0)
+				if ((coils_n_regs.data[1] == 0) && (coils_n_regs.data[2] == 0) && (coils_n_regs.data[3] == 0) && (coils_n_regs.data[4] == 0))
 				{
-					g_solution_data.addTemperature(LPP_CHANNEL_TEMP, coils_n_regs.sensor_data.temperature / 100.0);
+					MYLOG("MODR", "No data received");
+					break;
 				}
-				if (coils_n_regs.sensor_data.humidity != 0)
+				else
 				{
-					g_solution_data.addRelativeHumidity(LPP_CHANNEL_HUMID, coils_n_regs.sensor_data.humidity / 100.0);
-				}
-				if (coils_n_regs.sensor_data.pressure != 0)
-				{
-					g_solution_data.addBarometricPressure(LPP_CHANNEL_PRESS, coils_n_regs.sensor_data.pressure / 10.0);
-				}
-				if (coils_n_regs.sensor_data.battery != 0)
-				{
-					g_solution_data.addVoltage(LPP_CHANNEL_TEMP, coils_n_regs.sensor_data.battery / 100.0);
-				}
+					MYLOG("MODR", "Temperature = %.2f", coils_n_regs.sensor_data.temperature / 100.0);
+					MYLOG("MODR", "Humidity = %.2f", coils_n_regs.sensor_data.humidity / 100.0);
+					MYLOG("MODR", "Barometer = %.1f", coils_n_regs.sensor_data.pressure / 10.0);
+					MYLOG("MODR", "Battery = %.2f", coils_n_regs.sensor_data.battery / 100.0);
 
-				float battery_reading = 0.0;
-				// Add battery voltage
-				for (int i = 0; i < 10; i++)
-				{
-					battery_reading += api.system.bat.get(); // get battery voltage
+					data_ready = true;
+
+					// Clear payload
+					g_solution_data.reset();
+
+					if (coils_n_regs.sensor_data.temperature != 0)
+					{
+						g_solution_data.addTemperature(LPP_CHANNEL_TEMP, coils_n_regs.sensor_data.temperature / 100.0);
+					}
+					if (coils_n_regs.sensor_data.humidity != 0)
+					{
+						g_solution_data.addRelativeHumidity(LPP_CHANNEL_HUMID, coils_n_regs.sensor_data.humidity / 100.0);
+					}
+					if (coils_n_regs.sensor_data.pressure != 0)
+					{
+						g_solution_data.addBarometricPressure(LPP_CHANNEL_PRESS, coils_n_regs.sensor_data.pressure / 10.0);
+					}
+					if (coils_n_regs.sensor_data.battery != 0)
+					{
+						g_solution_data.addVoltage(LPP_CHANNEL_TEMP, coils_n_regs.sensor_data.battery / 100.0);
+					}
+
+					float battery_reading = 0.0;
+					// Add battery voltage
+					for (int i = 0; i < 10; i++)
+					{
+						battery_reading += api.system.bat.get(); // get battery voltage
+					}
+
+					battery_reading = battery_reading / 10;
+
+					g_solution_data.addVoltage(LPP_CHANNEL_BATT, battery_reading);
+
+					break;
 				}
-
-				battery_reading = battery_reading / 10;
-
-				g_solution_data.addVoltage(LPP_CHANNEL_BATT, battery_reading);
-
-				break;
 			}
 		}
 	}

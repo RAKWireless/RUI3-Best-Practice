@@ -32,6 +32,7 @@ _**Actions to reduce code size can be**_
 All examples are prepared to work in either LoRaWAN or LoRa P2P mode.    
 All examples are using AT commands for setup of the device instead of hard-coding the parameters with API calls!.
 
+<!--
 #### ⚠️ Required libraries not available in the Arduino Library Manager
 Some of the examples are using RUI3 libraries for the WisBlock modules. These libraries are simplified (to save code space on the RAK3172) and can be downloaded as ZIP files from
 - [RAKwireless_RAK1901_Temperature_and_Humidity_SHTC3.zip](https://downloads.rakwireless.com/RUI/RUI3/Library/RAKwireless_RAK1901_Temperature_and_Humidity_SHTC3.zip)
@@ -44,6 +45,7 @@ Some of the examples are using RUI3 libraries for the WisBlock modules. These li
 
 The libraries can be installed with the "Install from ZIP" function in the ArduinoIDE Library Manager.    
 The libraries can be installed as well manually by unzipping the content into the default Arduino Library folder.
+-->
 
 #### ⚠️ Supported RUI3 modules and devices
 The following modules are supported by RUI3:    
@@ -66,6 +68,17 @@ The following modules are supported by RUI3:
 ## [RUI3-LowPower-Example](./RUI3-LowPower-Example)
 The simpliest example is just showing how to design an application that is event based and keeps the MCU and LoRa transceiver in low power mode whenever possible.    
 It includes as well a simple example how to implement custom AT commands.
+
+## [RUI3-Downlinks](./RUI3-Downlinks)
+In some applications it might be required to change LoRaWAN settings dynamically from the LoRaWAN server.    
+This example code shows how to change     
+- send interval (ATC+SENDINT)
+- data rate (AT+DR)
+- automatic data rate adaption (AT+ADR)
+- confirmed packet mode (AT+CFM)    
+
+with downlinks from the LNS to the end node.
+
 
 ## [RUI3-RAK1901-RAK1902-Example](./RUI3-RAK1901-RAK1902-Example)    
 A simple sensor application based on RAK1901 and RAK1902. It reads temperature, humidity and barometric pressure from these sensors and sends them in a configurable interval.    

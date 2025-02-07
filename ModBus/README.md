@@ -408,8 +408,8 @@ _**WisBlock Core**_
 
 ----
 
-# LoRa® is a registered trademark or service mark of Semtech Corporation or its affiliates. 
+# LoRa&reg; is a registered trademark or service mark of Semtech Corporation or its affiliates. 
 
 ----
 
-# LoRaWAN® is a licensed mark.
+# LoRaWAN&reg; is a licensed mark.
