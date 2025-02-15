@@ -26,6 +26,9 @@ WisCayenne g_solution_data(255);
 /** Flag if RAK1906 was found */
 bool has_rak1906 = false;
 
+/** Device ID, created from DevEUI, used in LoRa P2P packets */
+
+uint8_t dev_id[8];
 /**
  * @brief Callback after join request cycle
  *
@@ -145,7 +148,10 @@ void setup()
 		api.lora.registerPRecvCallback(recv_cb);
 		api.lora.registerPSendCallback(send_cb);
 		api.lora.registerPSendCADCallback(cad_cb);
+		api.lorawan.deui.get(dev_id, 8);
 	}
+
+	api.lorawan.deui.get(dev_id, 8);
 
 	pinMode(LED_GREEN, OUTPUT);
 	digitalWrite(LED_GREEN, HIGH);
@@ -341,6 +347,8 @@ void send_packet(void)
 	else
 	{
 		MYLOG("UPLINK", "Send packet with size %d over P2P", g_solution_data.getSize());
+
+		g_solution_data.addDevID(LPP_CHANNEL_DEVID, &dev_id[4]);
 
 		if (api.lora.psend(g_solution_data.getSize(), g_solution_data.getBuffer(), true))
 		{
