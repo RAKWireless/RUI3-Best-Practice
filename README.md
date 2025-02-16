@@ -50,14 +50,14 @@ The libraries can be installed as well manually by unzipping the content into th
 #### ⚠️ Supported RUI3 modules and devices
 The following modules are supported by RUI3:    
 
-| _**WisDuo modules**_ | _**WisDuo EVB's**_ | _**WisBlock Core Modules**_ |
-| --- | --- | --- |
-| [RAK3172 stamp module](https://docs.rakwireless.com/Product-Categories/WisDuo/RAK3172-Module/Overview/) | [RAK3272S breakout board](https://docs.rakwireless.com/Product-Categories/WisDuo/RAK3272S-Breakout-Board/Overview/) | [RAK3372](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK3372/Overview/) |
-| | [RAK3172 evaluation board](https://docs.rakwireless.com/Product-Categories/WisDuo/RAK3172-Evaluation-Board/Overview/) | |
-| [RAK3172-SiP chip](https://docs.rakwireless.com/Product-Categories/WisDuo/RAK3172-SiP/Overview/) | [RAK3272-SiP breakout board](https://docs.rakwireless.com/Product-Categories/WisDuo/RAK3272-SiP-Breakout-Board/Overview/) |  |
-| [RAK4630 stamp module](https://docs.rakwireless.com/Product-Categories/WisDuo/RAK4630-Module/Overview/) |  | [RAK4631-R](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK4631-R/Overview/) | |
-| [RAK11720 stamp module](https://docs.rakwireless.com/Product-Categories/WisDuo/RAK11720-Module/Overview/) | [RAK11721 breakout board](https://docs.rakwireless.com/Product-Categories/WisDuo/RAK11721-Breakout-Board/Overview/) | [RAK11722](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK11722/Overview/) |
-| [RAK11160 stamp module](https://docs.rakwireless.com/Product-Categories/WisDuo/RAK11160-Module/Overview/) |  | [RAK11162](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK11162/Overview/) |
+| _**WisDuo modules**_                                                                                      | _**WisDuo EVB's**_                                                                                                        | _**WisBlock Core Modules**_                                                               |
+| --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| [RAK3172 stamp module](https://docs.rakwireless.com/Product-Categories/WisDuo/RAK3172-Module/Overview/)   | [RAK3272S breakout board](https://docs.rakwireless.com/Product-Categories/WisDuo/RAK3272S-Breakout-Board/Overview/)       | [RAK3372](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK3372/Overview/)     |
+|                                                                                                           | [RAK3172 evaluation board](https://docs.rakwireless.com/Product-Categories/WisDuo/RAK3172-Evaluation-Board/Overview/)     |                                                                                           |
+| [RAK3172-SiP chip](https://docs.rakwireless.com/Product-Categories/WisDuo/RAK3172-SiP/Overview/)          | [RAK3272-SiP breakout board](https://docs.rakwireless.com/Product-Categories/WisDuo/RAK3272-SiP-Breakout-Board/Overview/) |                                                                                           |
+| [RAK4630 stamp module](https://docs.rakwireless.com/Product-Categories/WisDuo/RAK4630-Module/Overview/)   |                                                                                                                           | [RAK4631-R](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK4631-R/Overview/) |
+| [RAK11720 stamp module](https://docs.rakwireless.com/Product-Categories/WisDuo/RAK11720-Module/Overview/) | [RAK11721 breakout board](https://docs.rakwireless.com/Product-Categories/WisDuo/RAK11721-Breakout-Board/Overview/)       | [RAK11722](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK11722/Overview/)   |
+| [RAK11160 stamp module](https://docs.rakwireless.com/Product-Categories/WisDuo/RAK11160-Module/Overview/) |                                                                                                                           | [RAK11162](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK11162/Overview/)   |
 
 
 ----
@@ -65,21 +65,22 @@ The following modules are supported by RUI3:
 # Available Examples
 
 ### Content
-| _**Generic**_                                                               | _**Sensors**_|
-| --------------------------------------------------------------------------- | --- |
-| [RUI3-LowPower-Example](#rui3-lowpower-example)                             | [RUI3-RAK1901-RAK1902-Example](#rui3-rak1901-rak1902-example) |
-| [LoRa P2P](#lora-p2p)                                                       | [RUI3-Sensor-Node-EPD-2.13](#rui3-sensor-node-epd) |
+| _**Generic**_                                                               | _**Sensors**_                                                                               |
+| --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| [RUI3-LowPower-Example](#rui3-lowpower-example)                             | [RUI3-RAK1901-RAK1902-Example](#rui3-rak1901-rak1902-example)                               |
+| [LoRa P2P](#lora-p2p)                                                       | [RUI3-Sensor-Node-EPD-2.13](#rui3-sensor-node-epd)                                          |
 | [RUI3-Mesh](#rui3-mesh)                                                     | [RUI3-Sensor-Node-EPD for Visual Studio Code](#rui3-sensor-node-epd-for-visual-studio-code) |
-| [RUI3-Downlinks](#rui3-downlinks)                                           | [RUI3-RAK12007-Waterlevel](#rui3-rak12007-waterlevel) |
-| [RUI3-RAK5811-Example](#rui3-rak5811-example)                               | [RUI3-RAK13011-Alarm](#rui3-rak13011-alarm) |
-| [RUI3 Modbus Master example](#rui3-modbus-master-example)                   | [RUI3-Sensor-Node-Air-Quality](#rui3-sensor-node-air-quality) |
-| [RUI3 RAK3172 DS18B20 OneWire Sensor](#rui3-rak3172-ds18b20-onewire-sensor) | [RUI3-WisBlock-Kit-1](#rui3-wisblock-kit-1) |
-| [RUI3-RAK12022](#rui3-rak12022)                                             | [RUI3-WisBlock-Kit-4](#rui3-wisblock-kit-4) |
-| _**Actuators**_                                                             | _**Location tracking**_ |
-| [RUI3-Relay-Class-C](#rui3-relay-class-c)                                   | [RUI3-RAK12500-RAK1904-GNSS](#rui3-rak12500-rak1904-gnss) |
-|                                                                             | [RUI3 GNSS Location](#rui3-gnss-location) |
-| _**Tools**_                                                                 | _**Gateways**_ |
-| [RUI3-Signal-Meter-P2P-LPWAN](#rui3-signal-meter-p2p-lpwan)                 | [RUI3 RAK11160 MQTT WiFi Gateway](#rui3-rak11160-mqtt-wifi-gateway) |
+| [RUI3-Downlinks](#rui3-downlinks)                                           | [RUI3-RAK12007-Waterlevel](#rui3-rak12007-waterlevel)                                       |
+| [RUI3-RAK5811-Example](#rui3-rak5811-example)                               | [RUI3-RAK13011-Alarm](#rui3-rak13011-alarm)                                                 |
+| [RUI3 Modbus Master example](#rui3-modbus-master-example)                   | [RUI3-Sensor-Node-Air-Quality](#rui3-sensor-node-air-quality)                               |
+| [RUI3 RAK3172 DS18B20 OneWire Sensor](#rui3-rak3172-ds18b20-onewire-sensor) | [RUI3-WisBlock-Kit-1](#rui3-wisblock-kit-1)                                                 |
+| [RUI3-RAK12022](#rui3-rak12022)                                             | [RUI3-WisBlock-Kit-4](#rui3-wisblock-kit-4)                                                 |
+| [RUI3 RAK11160 WiFi](#rui3-rak11160-wifi)                                   |                                                                                             |
+| _**Actuators**_                                                             | _**Location tracking**_                                                                     |
+| [RUI3-Relay-Class-C](#rui3-relay-class-c)                                   | [RUI3-RAK12500-RAK1904-GNSS](#rui3-rak12500-rak1904-gnss)                                   |
+|                                                                             | [RUI3 GNSS Location](#rui3-gnss-location)                                                   |
+| _**Tools**_                                                                 | _**Gateways**_                                                                              |
+| [RUI3-Signal-Meter-P2P-LPWAN](#rui3-signal-meter-p2p-lpwan)                 | [RUI3 RAK11160 MQTT WiFi Gateway](#rui3-rak11160-mqtt-wifi-gateway)                         |
 
 <!--
 - Generic
@@ -88,6 +89,7 @@ The following modules are supported by RUI3:
 	- [RUI3-RAK5811-Example](#rui3-rak5811-example)
 	- [LoRa P2P](#lora-p2p)
 	- [RUI3-Mesh](#rui3-mesh)
+	- [RUI3 RAK11160 WiFi](#rui3-rak11160-wifi)
 - Sensors
 	- [RUI3-RAK1901-RAK1902-Example](#rui3-rak1901-rak1902-example)
 	- [RUI3-Sensor-Node-EPD-2.13](#rui3-sensor-node-epd)
@@ -207,6 +209,11 @@ The WisDuo RAK11160 WisDuo provides LoRa, WiFi and BLE connectivity in one singl
 This makes it the perfect choice to build a gateway between the long range LoRa world and the cloud, or specifically here to an MQTT broker.    
 In this tutorial we will use a RAK11160 to setup a gateway between a sensor node that is sending data over LoRa P2P.    
 The RAK11160 is setup to receive these data, parse it into a JSON packet and send it to an MQTT broker.    
+
+## RUI3 RAK11160 WiFi
+The WisDuo RAK11160 WisDuo provides LoRa, WiFi and BLE connectivity in one single module.    
+This makes it the perfect choice to build a gateway between the long range LoRa world and the cloud, or specifically here to an MQTT broker.    
+In this tutorial we will show how to connect the RAK11160 to WiFi AP.          
 
 ----
 
