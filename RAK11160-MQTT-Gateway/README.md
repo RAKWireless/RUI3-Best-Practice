@@ -12,6 +12,10 @@ The RAK11160 is setup to receive these data, parse it into a JSON packet and sen
 
 For testing, a WisBlock Kit 4 flashed with the [RAK4631-Kit-4-RAK1906](https://github.com/beegee-tokyo/RAK4631-Kit-4-RAK1906) or [RUI3-WisBlock-Kit-4](https://github.com/RAKWireless/RUI3-Best-Practice/tree/main/RUI3-WisBlock-Kit-4) example application is used as the sensor node, but any other sensor node that is sending its sensor data in Cayenne LPP format will work as well (But might require changes in the [data parser](./parse.cpp)). 
 
+_**INFO**_    
+This example uses a simple username & password authentification for the MQTT broker.    
+For a authentification with certifications please check the [Espressif ESP-AT User Guide ==> MQTT AT Examples for Cloud](https://docs.espressif.com/projects/esp-at/en/latest/esp32/AT_Command_Examples/mqtt-at-examples-for-cloud.html)    
+
 ## Hardware
 
 ### Gateway
@@ -37,10 +41,21 @@ RUI3 based [RUI3-WisBlock-Kit-4](https://github.com/RAKWireless/RUI3-Best-Practi
 
 ## Principle of communication
 
-- The Sensor node is sending its sensor data as a LoRa P2P packet as [Cayenne Low Power Payload](https://docs.mydevices.com/docs/lorawan/cayenne-lpp).
-- The Gateway is receiving the sensor data, decodes the data packet and sends the information in JSON format to a MQTT broker.
+- **(1)** The Sensor node is sending its sensor data as a LoRa P2P packet as [Cayenne Low Power Payload](https://docs.mydevices.com/docs/lorawan/cayenne-lpp).
+- **(2)** The Gateway is receiving the sensor data and decodes the data packet.
+- **(3)** The Gateway sensd the data packet in JSON format to a MQTT broker.
 
 <center><img src="./assets/data-flow.png" alt="Dataflow"></center>
+
+## Indicators
+If the device is built with the RAK11162 and a WisBlock Base Board, the two LED's on the Base Board are used as indicators.      
+Blue LED
+- blinking indicates MQTT activity
+- if on permanently, connection to MQTT broker could not be established
+Green LED
+- blinking indicates WiFi setup
+- on and blue LED blinking indicates WiFi activity
+- if on permanently, connection to WiFi AP failed
 
 ## Setup
 
@@ -203,9 +218,9 @@ Set the ESP8684 into station mode and starts connection to the WiFi AP
 bool connect_wifi(void)
 {
 	// Clear send buffer
-	memset(esp_tx_buff, 0, 512);
-	snprintf(esp_tx_buff, 511, "AT+CWMODE=1,1\r\n");
-	Serial1.printf("%s", esp_tx_buff);
+	memset(esp_com_buff, 0, 512);
+	snprintf(esp_com_buff, 511, "AT+CWMODE=1,1\r\n");
+	Serial1.printf("%s", esp_com_buff);
 	Serial1.flush();
 	/** Expected response ********************
 	AT+CWMODE=1,1
@@ -214,15 +229,15 @@ bool connect_wifi(void)
 	*****************************************/
 	if (!wait_ok_response(10000))
 	{
-		MYLOG("WIFI", "WiFi station mode failed", esp_rx_buff);
+		MYLOG("WIFI", "WiFi station mode failed", esp_com_buff);
 		return false;
 	}
 
 	// Clear send buffer
-	memset(esp_tx_buff, 0, 512);
-	snprintf(esp_tx_buff, 511, "AT+CWJAP=\"%s\",\"%s\"\r\n", custom_parameters.MQTT_WIFI_APN, custom_parameters.MQTT_WIFI_PW);
-	// MYLOG("WIFI", "Connect with ==>%s<==", esp_tx_buff);
-	Serial1.printf("%s", esp_tx_buff);
+	memset(esp_com_buff, 0, 512);
+	snprintf(esp_com_buff, 511, "AT+CWJAP=\"%s\",\"%s\"\r\n", custom_parameters.MQTT_WIFI_APN, custom_parameters.MQTT_WIFI_PW);
+	// MYLOG("WIFI", "Connect with ==>%s<==", esp_com_buff);
+	Serial1.printf("%s", esp_com_buff);
 	Serial1.flush();
 	/** Expected response ********************
 	AT+cwjap="<MQTT_WIFI_APN>","<MQTT_WIFI_PW>"
@@ -234,11 +249,11 @@ bool connect_wifi(void)
 	*****************************************/
 	if (wait_ok_response(10000))
 	{
-		// MYLOG("WIFI", "ESP8684 connected: ==>%s<==\r\n", esp_rx_buff);
+		// MYLOG("WIFI", "ESP8684 connected: ==>%s<==\r\n", esp_com_buff);
 		MYLOG("WIFI", "ESP8684 connected");
 		return true;
 	}
-	MYLOG("WIFI", "ESP8684 not connected: ==>%s<==\r\n", esp_rx_buff);
+	MYLOG("WIFI", "ESP8684 not connected: ==>%s<==\r\n", esp_com_buff);
 	return false;
 }
 ```
@@ -253,11 +268,11 @@ Sets the MQTT credentials and connects to the MQTT broker
 bool connect_mqtt(void)
 {
 	// Clear send buffer
-	memset(esp_tx_buff, 0, 512);
-	snprintf(esp_tx_buff, 511, "AT+MQTTUSERCFG=0,1,\"%s\",\"%s\",\"%s\",0,0,\"\"\r\n", 
+	memset(esp_com_buff, 0, 512);
+	snprintf(esp_com_buff, 511, "AT+MQTTUSERCFG=0,1,\"%s\",\"%s\",\"%s\",0,0,\"\"\r\n", 
 		custom_parameters.MQTT_USER, custom_parameters.MQTT_USERNAME, custom_parameters.MQTT_PASSWORD);
-	// MYLOG("WIFI", "MQTT USR setup with ==>%s<==", esp_tx_buff);
-	Serial1.printf("%s", esp_tx_buff);
+	// MYLOG("WIFI", "MQTT USR setup with ==>%s<==", esp_com_buff);
+	Serial1.printf("%s", esp_com_buff);
 	Serial1.flush();
 	/** Expected response ********************
 	AT+MQTTUSERCFG=0,1,"<MQTT_USER>","<MQTT_USERNAME>","<MQTT_PASSWORD>",0,0,""
@@ -266,17 +281,17 @@ bool connect_mqtt(void)
 	*****************************************/
 	if (wait_ok_response(10000) == false)
 	{
-		MYLOG("WIFI", "MQTT USR config failed: ==>\n%s\n<==\r\n", esp_rx_buff);
+		MYLOG("WIFI", "MQTT USR config failed: ==>\n%s\n<==\r\n", esp_com_buff);
 		return false;
 	}
-	// MYLOG("WIFI", "MQTT USR config ok: ==>%s<==\r\n", esp_rx_buff);
+	// MYLOG("WIFI", "MQTT USR config ok: ==>%s<==\r\n", esp_com_buff);
 
 	// Clear send buffer
-	memset(esp_tx_buff, 0, 512);
-	snprintf(esp_tx_buff, 511, "AT+MQTTCONN=0,\"%s\",%s,0\r\n", 
+	memset(esp_com_buff, 0, 512);
+	snprintf(esp_com_buff, 511, "AT+MQTTCONN=0,\"%s\",%s,0\r\n", 
 		custom_parameters.MQTT_URL, custom_parameters.MQTT_PORT);
-	// MYLOG("WIFI", "MQTT Connect with ==>%s<==", esp_tx_buff);
-	Serial1.printf("%s", esp_tx_buff);
+	// MYLOG("WIFI", "MQTT Connect with ==>%s<==", esp_com_buff);
+	Serial1.printf("%s", esp_com_buff);
 	Serial1.flush();
 	/** Expected response ********************
 	AT+MQTTCONN=0,"<MQTT_URL>",<MQTT_PORT>,0
@@ -286,10 +301,10 @@ bool connect_mqtt(void)
 	*****************************************/
 	if (wait_ok_response(10000) == false)
 	{
-		MYLOG("WIFI", "MQTT connect failed: ==>\n%s\n<==\r\n", esp_rx_buff);
+		MYLOG("WIFI", "MQTT connect failed: ==>\n%s\n<==\r\n", esp_com_buff);
 		return false;
 	}
-	// MYLOG("WIFI", "MQTT connect ok: ==>%s<==\r\n", esp_rx_buff);
+	// MYLOG("WIFI", "MQTT connect ok: ==>%s<==\r\n", esp_com_buff);
 	return true;
 }
 ```
@@ -314,7 +329,7 @@ bool wait_ok_response(time_t timeout, char *wait_for)
 	bool got_ok = false;
 
 	// Clear TX buffer
-	memset(esp_rx_buff, 0, 512);
+	memset(esp_com_buff, 0, 512);
 
 	while ((millis() - start) < timeout)
 	{
@@ -323,7 +338,7 @@ bool wait_ok_response(time_t timeout, char *wait_for)
 			char rcvd = Serial1.read();
 			// Serial.write(rcvd);
 			// Serial.flush();
-			esp_rx_buff[buff_idx] = rcvd;
+			esp_com_buff[buff_idx] = rcvd;
 			buff_idx++;
 			if (buff_idx == 512)
 			{
@@ -331,7 +346,7 @@ bool wait_ok_response(time_t timeout, char *wait_for)
 				return false;
 			}
 
-			if (strstr(esp_rx_buff, wait_for) != NULL)
+			if (strstr(esp_com_buff, wait_for) != NULL)
 			{
 				return true;
 			}
@@ -440,11 +455,11 @@ After parsing the LoRa packet, the JSON char array is published to the defined t
 bool publish_raw_msg(char *sub_topic, uint8_t *message, size_t msg_len)
 {
 	// Clear send buffer
-	memset(esp_tx_buff, 0, 512);
-	snprintf(esp_tx_buff, 511, "AT+MQTTPUBRAW=0,\"%s%s\",%d,0,0\r\n", 
+	memset(esp_com_buff, 0, 512);
+	snprintf(esp_com_buff, 511, "AT+MQTTPUBRAW=0,\"%s%s\",%d,0,0\r\n", 
 		custom_parameters.MQTT_PUB, sub_topic, msg_len);
-	// MYLOG("WIFI", "MQTT Publish Raw ==>%s<==", esp_tx_buff);
-	Serial1.printf("%s", esp_tx_buff);
+	// MYLOG("WIFI", "MQTT Publish Raw ==>%s<==", esp_com_buff);
+	Serial1.printf("%s", esp_com_buff);
 	Serial1.flush();
 	/** Expected response ********************
 	OK
@@ -452,7 +467,7 @@ bool publish_raw_msg(char *sub_topic, uint8_t *message, size_t msg_len)
 	*****************************************/
 	if (wait_ok_response(10000,">") == false)
 	{
-		MYLOG("WIFI", "MQTT PUB RAW failed: ==>%s<==\r\n", esp_rx_buff);
+		MYLOG("WIFI", "MQTT PUB RAW failed: ==>%s<==\r\n", esp_com_buff);
 		return false;
 	}
 	// Start sending data
@@ -462,11 +477,11 @@ bool publish_raw_msg(char *sub_topic, uint8_t *message, size_t msg_len)
 	}
 	if (wait_ok_response(60000) == false)
 	{
-		MYLOG("WIFI", "MQTT PUB RAW failed: ==>\n%s\n<==\r\n", esp_rx_buff);
+		MYLOG("WIFI", "MQTT PUB RAW failed: ==>\n%s\n<==\r\n", esp_com_buff);
 		wifi_sending = false;
 		return false;
 	}
-	// MYLOG("WIFI", "MQTT PUB RAW ok: ==>%s<==\r\n", esp_rx_buff);
+	// MYLOG("WIFI", "MQTT PUB RAW ok: ==>%s<==\r\n", esp_com_buff);
 	MYLOG("WIFI", "MQTT PUB RAW ok");
 	wifi_sending = false;
 	return true;

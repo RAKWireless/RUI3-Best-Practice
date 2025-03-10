@@ -18,6 +18,9 @@ bool has_mqtt_conn = false;
 /** WiFi active flag */
 bool wifi_sending = false;
 
+/** Queue with received data packets (max 20, each 128 bytes long) */
+ArrayQueue Fifo;
+
 /**
  * @brief Arduino setup function, called once
  *
@@ -37,16 +40,25 @@ void setup(void)
 	api.lora.registerPSendCallback(send_cb);
 
 	// Setup GPIO's
-	pinMode(LED_GREEN, OUTPUT);
-	digitalWrite(LED_GREEN, HIGH);
-	pinMode(LED_BLUE, OUTPUT);
-	digitalWrite(LED_BLUE, HIGH);
+	pinMode(LED_WIFI, OUTPUT);
+	digitalWrite(LED_WIFI, HIGH);
+	pinMode(LED_MQTT, OUTPUT);
+	digitalWrite(LED_MQTT, LOW);
 
 	// Start Serial
 	Serial.begin(115200);
 
 	// Delay for 5 seconds to give the chance for AT+BOOT
-	delay(5000);
+	time_t start_wait = millis();
+	while ((millis()-start_wait) < 5000)
+	{
+		digitalWrite(LED_WIFI, !digitalRead(LED_WIFI));
+		digitalWrite(LED_MQTT, !digitalRead(LED_MQTT));
+		delay(100);
+	}
+	digitalWrite(LED_WIFI, HIGH);
+	digitalWrite(LED_MQTT, HIGH);
+	// delay(5000);
 
 	api.system.firmwareVersion.set("RUI3-MQTT-WIFI-GW-V1.0.0");
 
@@ -54,6 +66,8 @@ void setup(void)
 	Serial.println("---------------------------------------------------------------");
 	Serial.println("Setup the device with WisToolBox or AT commands before using it");
 	Serial.println("---------------------------------------------------------------");
+	Serial.flush();
+	delay(100);
 
 	// Get custom settings for WiFi and MQTT
 	if (!init_wifi_at())
@@ -74,9 +88,9 @@ void setup(void)
 	}
 	else
 	{
-		digitalWrite(LED_GREEN, LOW);
+		digitalWrite(LED_WIFI, LOW);
+		digitalWrite(LED_MQTT, LOW);
 	}
-	digitalWrite(LED_BLUE, LOW);
 
 	// Initialize timer for sending received LoRa P2P packet to MQTT broker
 	api.system.timer.create(RAK_TIMER_0, send_handler, RAK_TIMER_ONESHOT);
@@ -100,35 +114,60 @@ void loop(void)
  */
 void send_handler(void *)
 {
-	if (has_wifi_conn && has_mqtt_conn)
-	{
-		digitalWrite(LED_BLUE, HIGH);
-		MYLOG("SEND", "Publish packet to MQTT Broker");
-		// Send as JSON
-		size_t buff_len = parse(rcvd_buffer, rcvd_buffer_size);
-		if (buff_len != 0)
-		{
-			if (!publish_raw_msg((char *)"Test", (uint8_t *)json_buffer, buff_len))
-			{
-				MYLOG("SEND", "Publish failed");
-			}
-			else
-			{
-				MYLOG("SEND", "Publish success");
-			}
-		}
-		else
-		{
-			// MYLOG("SEND", "Parse to JSON failed");
-		}
-		digitalWrite(LED_BLUE, LOW);
-	}
-	else
+	digitalWrite(LED_WIFI, HIGH);
+	if (!has_wifi_conn || !has_mqtt_conn)
 	{
 		// No connection to WiFi or Broker, retry to connect
-		if (!init_connection())
+		if (!init_connection(true))
 		{
 			MYLOG("SEND", "Reconnect failed");
 		}
+	}
+
+	if (has_wifi_conn && has_mqtt_conn)
+	{
+		digitalWrite(LED_MQTT, HIGH);
+		while (!Fifo.isEmpty())
+		{
+			MYLOG("SEND", "%d FiFo entries ", Fifo.getSize());
+			// Get last entry from the Fifo queue
+			uint16_t buffer_size = Fifo.getPayloadSize();
+			MYLOG("SEND", "Payload size %d", buffer_size);
+			uint8_t *buffer = Fifo.getPayload();
+#if MY_DEBUG > 0
+			for (int i = 0; i < buffer_size; i++)
+			{
+				Serial.printf("%02X", buffer[i]);
+			}
+			Serial.print("\r\n");
+#endif
+			// Parse the data
+			MYLOG("SEND", "Publish packet to MQTT Broker");
+			// Send as JSON
+			size_t buff_len = parse(buffer, buffer_size);
+
+			if (buff_len != 0)
+			{
+				if (!publish_raw_msg((char *)"Test", (uint8_t *)json_buffer, buff_len))
+				{
+					MYLOG("SEND", "Publish failed");
+					has_wifi_conn = false;
+					has_mqtt_conn = false;
+				}
+				else
+				{
+					MYLOG("SEND", "Publish success");
+				}
+			}
+			else
+			{
+				// MYLOG("SEND", "Parse to JSON failed");
+			}
+
+			// Remove entry from queue
+			Fifo.deQueue();
+		}
+		digitalWrite(LED_MQTT, LOW);
+		digitalWrite(LED_WIFI, LOW);
 	}
 }

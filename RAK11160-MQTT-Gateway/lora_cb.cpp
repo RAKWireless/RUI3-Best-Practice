@@ -10,11 +10,6 @@
  */
 #include "app.h"
 
-/** Temporary buffer for received LoRa P2P packets */
-uint8_t rcvd_buffer[256];
-/** Size of data in temporary buffer */
-uint16_t rcvd_buffer_size = 0;
-
 /**
  * @brief LoRa P2P callback if a packet was received
  *
@@ -22,19 +17,20 @@ uint16_t rcvd_buffer_size = 0;
  */
 void recv_cb(rui_lora_p2p_recv_t data)
 {
-	// MYLOG("RX-P2P-CB", "P2P RX, RSSI %d, SNR %d", data.Rssi, data.Snr);
-	// for (int i = 0; i < data.BufferSize; i++)
-	// {
-	// 	Serial.printf("%02X", data.Buffer[i]);
-	// }
-	// Serial.print("\r\n");
-
+	// Add received data into FiFo Queue
+	if (has_wifi_conn && has_mqtt_conn)
+	{
+		if (!Fifo.enQueue(data.Buffer, data.BufferSize))
+		{
+			// interrupts();
+			MYLOG("RX-P2P-CB", "FiFo full");
+			return;
+		}
+	}
+	MYLOG("RX-P2P-CB", "%d FiFo entries ", Fifo.getSize());
 	if (!wifi_sending)
 	{
-		// Copy received data into buffer
-		memcpy(rcvd_buffer, data.Buffer, data.BufferSize);
-		rcvd_buffer_size = data.BufferSize;
-
+		MYLOG("RX-P2P-CB", "Handle Fifo");
 		wifi_sending = true;
 		// Activate send to WiFi function
 		api.system.timer.start(RAK_TIMER_0, 100, NULL);
@@ -48,5 +44,5 @@ void recv_cb(rui_lora_p2p_recv_t data)
 void send_cb(void)
 {
 	// MYLOG("TX-P2P-CB", "P2P TX finished");
-	digitalWrite(LED_BLUE, LOW);
+	digitalWrite(LED_WIFI, LOW);
 }

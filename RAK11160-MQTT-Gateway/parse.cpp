@@ -13,7 +13,7 @@
 
 #ifndef JSON_BUFF_SIZE
 /** Default JSON buffer size */
-#define JSON_BUFF_SIZE 4096
+#define JSON_BUFF_SIZE 2048
 #endif
 
 /** JSON document for sending and response */
@@ -53,7 +53,7 @@ uint32_t value_divider[NUM_DEFINED_SENSOR_TYPES] = {1, 1, 100, 100, 1, 1, 1, 10,
 													1, 10000, 1000000, 1, 1, 10, 100, 1,
 													1000, 100, 10, 1, 1, 1};
 
-// {136;9;"gps";true; [ 10000, 10000, 100 ]},
+// {136;9;"gps";true; [ 10000,   10000,   100 ]},
 // {137;11;"gps";true;[ 1000000, 1000000, 100 ]},
 
 /**
@@ -208,7 +208,7 @@ size_t parse(uint8_t *data, uint16_t data_len)
 	// MYLOG("PARSE", "Finished parsing");
 	size_t packet_size = serializeJson(note_json, json_buffer);
 
-	// MYLOG("PARSE", "JSON: %d bytes %s", packet_size, json_buffer);
+	MYLOG("PARSE", "\nJSON: %d bytes %s\n", packet_size, json_buffer);
 
 	return packet_size;
 }

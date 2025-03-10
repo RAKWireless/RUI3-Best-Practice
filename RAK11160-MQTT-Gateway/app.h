@@ -9,14 +9,18 @@
  *
  */
 #include <Arduino.h>
+#include "ArrayQueue.h"
 
 // Redefine LED1 pin (Only needed until RAK11160 is officially supported by RUI3)
 #ifdef WB_LED1
 #undef WB_LED1
-#undef LED_GREEN
+#undef LED_BLUE
 #define WB_LED1 PA10
-#define LED_GREEN PIN_LED1
+#define LED_BLUE PIN_LED1
 #endif
+
+#define LED_MQTT PA1
+#define LED_WIFI PA10
 
 // Define enable pin for ESP8684
 #define WB_ESP8684 PA0
@@ -44,13 +48,13 @@
 // Forward declarations
 void recv_cb(rui_lora_p2p_recv_t data);
 void send_cb(void);
-bool init_connection(void);
-bool init_wifi(void);
+bool init_connection(bool restart = false);
+bool init_wifi(bool restart);
 bool connect_wifi(void);
-bool connect_mqtt(void);
+bool connect_mqtt(bool restart = false);
 bool publish_msg(char *sub_topic, char *message);
 bool publish_raw_msg(char *sub_topic, uint8_t *message, size_t msg_len);
-bool wait_ok_response(time_t timeout, char *wait_for = "OK");
+bool wait_ok_response(time_t timeout, uint8_t pin, char *wait_for = "OK");
 void send_handler(void *);
 size_t parse(uint8_t *data, uint16_t data_len);
 extern uint8_t rcvd_buffer[];
@@ -59,6 +63,7 @@ extern bool has_wifi_conn;
 extern bool has_mqtt_conn;
 extern bool wifi_sending;
 extern char json_buffer[];
+extern ArrayQueue Fifo;
 
 // Custom AT commands
 bool init_wifi_at(void);

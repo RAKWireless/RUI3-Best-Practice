@@ -3,5 +3,5 @@
     "board": "rak_rui:stm32:WisDuoRAK3172TBoard",
     "sketch": "RAK11160-MQTT-Gateway.ino",
     "output": "build",
-    "port": "COM6"
+    "port": "COM4"
 }
