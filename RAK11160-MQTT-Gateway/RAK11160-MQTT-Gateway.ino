@@ -50,7 +50,7 @@ void setup(void)
 
 	// Delay for 5 seconds to give the chance for AT+BOOT
 	time_t start_wait = millis();
-	while ((millis()-start_wait) < 5000)
+	while ((millis() - start_wait) < 5000)
 	{
 		digitalWrite(LED_WIFI, !digitalRead(LED_WIFI));
 		digitalWrite(LED_MQTT, !digitalRead(LED_MQTT));
@@ -121,6 +121,7 @@ void send_handler(void *)
 		if (!init_connection(true))
 		{
 			MYLOG("SEND", "Reconnect failed");
+			digitalWrite(LED_WIFI, HIGH);
 		}
 	}
 
@@ -151,11 +152,13 @@ void send_handler(void *)
 				if (!publish_raw_msg((char *)"Test", (uint8_t *)json_buffer, buff_len))
 				{
 					MYLOG("SEND", "Publish failed");
+					digitalWrite(LED_MQTT, HIGH);
 					has_wifi_conn = false;
 					has_mqtt_conn = false;
 				}
 				else
 				{
+					digitalWrite(LED_MQTT, LOW);
 					MYLOG("SEND", "Publish success");
 				}
 			}
@@ -167,7 +170,7 @@ void send_handler(void *)
 			// Remove entry from queue
 			Fifo.deQueue();
 		}
-		digitalWrite(LED_MQTT, LOW);
 		digitalWrite(LED_WIFI, LOW);
 	}
+	wifi_sending = false;
 }

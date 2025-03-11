@@ -27,9 +27,9 @@ char wtx_buf[512];
 char wrx_buf[512];
 
 /** WiFi AP name */
-char MQTT_WIFI_APN[32] = "MyHomeLan";
+char MQTT_WIFI_APN[32] = "RAKwireless";
 /** WiFi AP password */
-char MQTT_WIFI_PW[32] = "Bernabe@1700";
+char MQTT_WIFI_PW[32] = "RAKwireless";
 
 /**
  * @brief Wait for response from ESP8684

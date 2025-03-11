@@ -284,7 +284,7 @@ bool publish_raw_msg(char *sub_topic, uint8_t *message, size_t msg_len)
 	*****************************************/
 	if (wait_ok_response(10000, LED_MQTT, ">") == false)
 	{
-		MYLOG("WIFI", "MQTT PUB RAW failed: ==>%s<==\r\n", esp_com_buff);
+		MYLOG("WIFI", "MQTT PUB RAW failed waiting for '>': ==>%s<==\r\n", esp_com_buff);
 		return false;
 	}
 	digitalWrite(LED_MQTT, LOW);
@@ -292,10 +292,11 @@ bool publish_raw_msg(char *sub_topic, uint8_t *message, size_t msg_len)
 	for (int idx = 0; idx < msg_len; idx++)
 	{
 		Serial1.write(message[idx]);
+		delay(5);
 	}
 	if (wait_ok_response(60000, LED_MQTT) == false)
 	{
-		MYLOG("WIFI", "MQTT PUB RAW failed: ==>\n%s\n<==\r\n", esp_com_buff);
+		MYLOG("WIFI", "MQTT PUB RAW failed waiting for 'OK': ==>\n%s\n<==\r\n", esp_com_buff);
 		return false;
 	}
 	digitalWrite(LED_MQTT, LOW);

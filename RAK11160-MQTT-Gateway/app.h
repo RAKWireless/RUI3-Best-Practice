@@ -74,14 +74,14 @@ bool save_at_setting(void);
 struct custom_param_s
 {
 	uint8_t valid_flag = 0xAA;
-	char MQTT_WIFI_APN[32] = "MyHomeLan";
-	char MQTT_WIFI_PW[32] = "Bernabe@1700";
+	char MQTT_WIFI_APN[32] = "RAKwireless";
+	char MQTT_WIFI_PW[32] = "RAKwireless";
 	char MQTT_USER[32] = "ESP8684";
-	char MQTT_USERNAME[32] = "rakwireless";
-	char MQTT_PASSWORD[32] = "Bernabe@1700";
-	char MQTT_URL[32] = "45.159.220.139";
+	char MQTT_USERNAME[32] = "RAKwireless";
+	char MQTT_PASSWORD[32] = "RAKwireless";
+	char MQTT_URL[32] = "127.0.0.1";
 	char MQTT_PORT[32] = "1883";
-	char MQTT_PUB[32] = "my_mesh/";
+	char MQTT_PUB[32] = "RAKwireless/";
 };
 
 // Custom flash parameters

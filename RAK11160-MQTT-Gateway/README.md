@@ -178,12 +178,17 @@ Initializes the UART connection and checks if the ESP8684 is responding
   <summary>Show init_wifi code</summary>
 
 ```cpp
-bool init_wifi(void)
+bool init_wifi(bool restart)
 {
 	// Initialize Serial to ESP8684
 	Serial1.begin(115200);
-	// Enable ESP8684
 	pinMode(WB_ESP8684, OUTPUT);
+	if (restart)
+	{
+		digitalWrite(WB_ESP8684, LOW);
+		delay(1000);
+	}
+	// Enable ESP8684
 	digitalWrite(WB_ESP8684, HIGH);
 	// Wait for ESP8684 bootup
 	time_t start = millis();
@@ -196,14 +201,21 @@ bool init_wifi(void)
 
 		OK
 		*****************************************/
-		if (wait_ok_response(10000))
+		if (wait_ok_response(10000, LED_WIFI))
 		{
-			// MYLOG("WIFI", "ESP8684 respond to AT: ==>\n%s\n<==\r\n", wtx_buf);
+			// MYLOG("WIFI", "ESP8684 respond to AT: ==>\n%s\n<==\r\n", esp_com_buff);
 			MYLOG("WIFI", "ESP8684 found");
 			return true;
 		}
 		delay(500);
 	}
+	digitalWrite(LED_WIFI, LOW);
+
+	// if analog input pin 1 is unconnected, random analog
+	// noise will cause the call to randomSeed() to generate
+	// different seed numbers each time the sketch runs.
+	// randomSeed() will then shuffle the random function.
+	randomSeed(analogRead(WB_A1));
 	return false;
 }
 ```
@@ -227,11 +239,12 @@ bool connect_wifi(void)
 
 	OK
 	*****************************************/
-	if (!wait_ok_response(10000))
+	if (!wait_ok_response(10000, LED_WIFI))
 	{
 		MYLOG("WIFI", "WiFi station mode failed", esp_com_buff);
 		return false;
 	}
+	digitalWrite(LED_WIFI, LOW);
 
 	// Clear send buffer
 	memset(esp_com_buff, 0, 512);
@@ -247,12 +260,14 @@ bool connect_wifi(void)
 
 	OK
 	*****************************************/
-	if (wait_ok_response(10000))
+	if (wait_ok_response(10000, LED_WIFI))
 	{
 		// MYLOG("WIFI", "ESP8684 connected: ==>%s<==\r\n", esp_com_buff);
 		MYLOG("WIFI", "ESP8684 connected");
 		return true;
 	}
+	digitalWrite(LED_WIFI, LOW);
+
 	MYLOG("WIFI", "ESP8684 not connected: ==>%s<==\r\n", esp_com_buff);
 	return false;
 }
@@ -265,12 +280,36 @@ Sets the MQTT credentials and connects to the MQTT broker
   <summary>Show connect_mqtt code</summary>
 
 ```cpp
-bool connect_mqtt(void)
+bool connect_mqtt(bool restart)
 {
+	if (restart)
+	{
+		// Clear send buffer
+		memset(esp_com_buff, 0, 512);
+		snprintf(esp_com_buff, 511, "AT+MQTTCLEAN=0\r\n");
+		// MYLOG("WIFI", "MQTT Clean with ==>%s<==", esp_com_buff);
+		Serial1.printf("%s", esp_com_buff);
+		Serial1.flush();
+		/** Expected response ********************
+		AT+MQTTCLEAN=0
+
+		OK
+		*****************************************/
+		if (wait_ok_response(10000, LED_MQTT) == false)
+		{
+			MYLOG("WIFI", "MQTT CLEAN failed: ==>\n%s\n<==\r\n", esp_com_buff);
+		}
+		digitalWrite(LED_MQTT, LOW);
+	}
+	// Create random user
+	uint16_t id = random(0, 65535);
+	char mqtt_user[64];
+	sprintf(mqtt_user, "%s%04X", custom_parameters.MQTT_USER, id);
+
 	// Clear send buffer
 	memset(esp_com_buff, 0, 512);
-	snprintf(esp_com_buff, 511, "AT+MQTTUSERCFG=0,1,\"%s\",\"%s\",\"%s\",0,0,\"\"\r\n", 
-		custom_parameters.MQTT_USER, custom_parameters.MQTT_USERNAME, custom_parameters.MQTT_PASSWORD);
+	snprintf(esp_com_buff, 511, "AT+MQTTUSERCFG=0,1,\"%s\",\"%s\",\"%s\",0,0,\"\"\r\n",
+			 mqtt_user, custom_parameters.MQTT_USERNAME, custom_parameters.MQTT_PASSWORD);
 	// MYLOG("WIFI", "MQTT USR setup with ==>%s<==", esp_com_buff);
 	Serial1.printf("%s", esp_com_buff);
 	Serial1.flush();
@@ -279,17 +318,18 @@ bool connect_mqtt(void)
 
 	OK
 	*****************************************/
-	if (wait_ok_response(10000) == false)
+	if (wait_ok_response(10000, LED_MQTT) == false)
 	{
 		MYLOG("WIFI", "MQTT USR config failed: ==>\n%s\n<==\r\n", esp_com_buff);
 		return false;
 	}
+	digitalWrite(LED_MQTT, LOW);
 	// MYLOG("WIFI", "MQTT USR config ok: ==>%s<==\r\n", esp_com_buff);
 
 	// Clear send buffer
 	memset(esp_com_buff, 0, 512);
-	snprintf(esp_com_buff, 511, "AT+MQTTCONN=0,\"%s\",%s,0\r\n", 
-		custom_parameters.MQTT_URL, custom_parameters.MQTT_PORT);
+	snprintf(esp_com_buff, 511, "AT+MQTTCONN=0,\"%s\",%s,0\r\n",
+			 custom_parameters.MQTT_URL, custom_parameters.MQTT_PORT);
 	// MYLOG("WIFI", "MQTT Connect with ==>%s<==", esp_com_buff);
 	Serial1.printf("%s", esp_com_buff);
 	Serial1.flush();
@@ -299,11 +339,12 @@ bool connect_mqtt(void)
 
 	OK
 	*****************************************/
-	if (wait_ok_response(10000) == false)
+	if (wait_ok_response(10000, LED_MQTT) == false)
 	{
 		MYLOG("WIFI", "MQTT connect failed: ==>\n%s\n<==\r\n", esp_com_buff);
 		return false;
 	}
+	digitalWrite(LED_MQTT, LOW);
 	// MYLOG("WIFI", "MQTT connect ok: ==>%s<==\r\n", esp_com_buff);
 	return true;
 }
@@ -322,7 +363,7 @@ The full response of the ESP8684 is available in the _**`wtx_buf`**_ array for f
   <summary>Show wait_ok_response code</summary>
 
 ```cpp
-bool wait_ok_response(time_t timeout, char *wait_for)
+bool wait_ok_response(time_t timeout, uint8_t pin, char *wait_for)
 {
 	time_t start = millis();
 	int buff_idx = 0;
@@ -342,20 +383,24 @@ bool wait_ok_response(time_t timeout, char *wait_for)
 			buff_idx++;
 			if (buff_idx == 512)
 			{
+				digitalWrite(pin, LOW);
 				// Buffer overflow, return false
 				return false;
 			}
 
 			if (strstr(esp_com_buff, wait_for) != NULL)
 			{
+				// Serial.println("RX OK");
+				digitalWrite(pin, LOW);
 				return true;
 			}
 		}
-		delay(5);
+		digitalWrite(pin, !digitalRead(pin));
+		delay(100);
 	}
+	digitalWrite(pin, LOW);
 	return false;
-}
-```
+}```
 </details>
 
 ### Receive LoRa packets
@@ -377,12 +422,20 @@ The callback itself can retrieve the information for the received packet from a 
 ```cpp
 void recv_cb(rui_lora_p2p_recv_t data)
 {
+	// Add received data into FiFo Queue
+	if (has_wifi_conn && has_mqtt_conn)
+	{
+		if (!Fifo.enQueue(data.Buffer, data.BufferSize))
+		{
+			// interrupts();
+			MYLOG("RX-P2P-CB", "FiFo full");
+			return;
+		}
+	}
+	MYLOG("RX-P2P-CB", "%d FiFo entries ", Fifo.getSize());
 	if (!wifi_sending)
 	{
-		// Copy received data into buffer
-		memcpy(rcvd_buffer, data.Buffer, data.BufferSize);
-		rcvd_buffer_size = data.BufferSize;
-
+		MYLOG("RX-P2P-CB", "Handle Fifo");
 		wifi_sending = true;
 		// Activate send to WiFi function
 		api.system.timer.start(RAK_TIMER_0, 100, NULL);
@@ -391,10 +444,9 @@ void recv_cb(rui_lora_p2p_recv_t data)
 ```
 </details>
 
-⚠️ WARNING
-_**The example code is not setup to handle many incoming LoRa P2P packets. Parsing and forwarding the packets over WiFi can take longer than the interval between two received data packets.**_    
-_**To avoid data loss, additional measurements are required, like storing received packets in a queue and send them one by one to the MQTT broker.**_    
-_**For simplicity, no such functionality is added to this example code.**_    
+⚠️ INFO
+_**Parsing and forwarding the packets over WiFi can take longer than the interval between two received data packets.**_    
+_**To avoid data loss, received packets are stored in a queue and sent one by one to the MQTT broker.**_      
 
 ### Parse incoming LoRa packets
 
@@ -456,8 +508,8 @@ bool publish_raw_msg(char *sub_topic, uint8_t *message, size_t msg_len)
 {
 	// Clear send buffer
 	memset(esp_com_buff, 0, 512);
-	snprintf(esp_com_buff, 511, "AT+MQTTPUBRAW=0,\"%s%s\",%d,0,0\r\n", 
-		custom_parameters.MQTT_PUB, sub_topic, msg_len);
+	snprintf(esp_com_buff, 511, "AT+MQTTPUBRAW=0,\"%s%s\",%d,0,0\r\n",
+			 custom_parameters.MQTT_PUB, sub_topic, msg_len);
 	// MYLOG("WIFI", "MQTT Publish Raw ==>%s<==", esp_com_buff);
 	Serial1.printf("%s", esp_com_buff);
 	Serial1.flush();
@@ -465,25 +517,26 @@ bool publish_raw_msg(char *sub_topic, uint8_t *message, size_t msg_len)
 	OK
 	>
 	*****************************************/
-	if (wait_ok_response(10000,">") == false)
+	if (wait_ok_response(10000, LED_MQTT, ">") == false)
 	{
-		MYLOG("WIFI", "MQTT PUB RAW failed: ==>%s<==\r\n", esp_com_buff);
+		MYLOG("WIFI", "MQTT PUB RAW failed waiting for '>': ==>%s<==\r\n", esp_com_buff);
 		return false;
 	}
+	digitalWrite(LED_MQTT, LOW);
 	// Start sending data
 	for (int idx = 0; idx < msg_len; idx++)
 	{
 		Serial1.write(message[idx]);
+		delay(5);
 	}
-	if (wait_ok_response(60000) == false)
+	if (wait_ok_response(60000, LED_MQTT) == false)
 	{
-		MYLOG("WIFI", "MQTT PUB RAW failed: ==>\n%s\n<==\r\n", esp_com_buff);
-		wifi_sending = false;
+		MYLOG("WIFI", "MQTT PUB RAW failed waiting for 'OK': ==>\n%s\n<==\r\n", esp_com_buff);
 		return false;
 	}
+	digitalWrite(LED_MQTT, LOW);
 	// MYLOG("WIFI", "MQTT PUB RAW ok: ==>%s<==\r\n", esp_com_buff);
 	MYLOG("WIFI", "MQTT PUB RAW ok");
-	wifi_sending = false;
 	return true;
 }
 ```
