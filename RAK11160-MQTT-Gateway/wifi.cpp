@@ -13,6 +13,9 @@
 /** WiFi communication buffer */
 char esp_com_buff[512];
 
+// Forward declaration
+void flush_RX(void);
+
 /**
  * @brief Initialize WiFi and MQTT connections
  *
@@ -23,30 +26,32 @@ bool init_connection(bool restart)
 {
 	if (!init_wifi(restart))
 	{
-		MYLOG("SETUP", "Init ESP8684 failed");
+		MYLOG("WIFI", "Init ESP8684 failed");
 		return false;
 	}
 	else
 	{
+		MYLOG("WIFI", "Init ESP8684 ok");
 		// Initialize WiFi connection
 		has_wifi_conn = connect_wifi();
 		if (!has_wifi_conn)
 		{
-			MYLOG("SETUP", "WiFi connection failed");
+			MYLOG("WIFI", "WiFi connection failed");
 			return false;
 		}
 		else
 		{
+			MYLOG("WIFI", "WiFi connected");
 			// Initialize MQTT Broker connection
 			has_mqtt_conn = connect_mqtt(restart);
 			if (!has_mqtt_conn)
 			{
-				MYLOG("SETUP", "MQTT Broker connection failed");
+				MYLOG("WIFI", "MQTT Broker connection failed");
 				return false;
 			}
 			else
 			{
-				MYLOG("SETUP", "WiFi and MQTT Broker connected");
+				MYLOG("WIFI", "MQTT Broker connected");
 			}
 		}
 	}
@@ -85,12 +90,15 @@ bool init_wifi(bool restart)
 		if (wait_ok_response(10000, LED_WIFI))
 		{
 			// MYLOG("WIFI", "ESP8684 respond to AT: ==>\n%s\n<==\r\n", esp_com_buff);
-			MYLOG("WIFI", "ESP8684 found");
+			// MYLOG("WIFI", "ESP8684 found");
 			return true;
 		}
 		delay(500);
 	}
 	digitalWrite(LED_WIFI, LOW);
+
+	// Try to flush the RX buffer in case there is some ESP8684 stuff in it
+	flush_RX();
 
 	// if analog input pin 1 is unconnected, random analog
 	// noise will cause the call to randomSeed() to generate
@@ -108,6 +116,10 @@ bool init_wifi(bool restart)
  */
 bool connect_wifi(void)
 {
+	// Try to flush the RX buffer in case there is some ESP8684 stuff in it
+	flush_RX();
+
+	// Set connection mode to Station
 	// Clear send buffer
 	memset(esp_com_buff, 0, 512);
 	snprintf(esp_com_buff, 511, "AT+CWMODE=1,1\r\n");
@@ -125,6 +137,10 @@ bool connect_wifi(void)
 	}
 	digitalWrite(LED_WIFI, LOW);
 
+	// Try to flush the RX buffer in case there is some ESP8684 stuff in it
+	flush_RX();
+
+	// Set AP name and password
 	// Clear send buffer
 	memset(esp_com_buff, 0, 512);
 	snprintf(esp_com_buff, 511, "AT+CWJAP=\"%s\",\"%s\"\r\n", custom_parameters.MQTT_WIFI_APN, custom_parameters.MQTT_WIFI_PW);
@@ -139,10 +155,31 @@ bool connect_wifi(void)
 
 	OK
 	*****************************************/
-	if (wait_ok_response(10000, LED_WIFI))
+	if (!wait_ok_response(10000, LED_WIFI))
 	{
 		// MYLOG("WIFI", "ESP8684 connected: ==>%s<==\r\n", esp_com_buff);
-		MYLOG("WIFI", "ESP8684 connected");
+		MYLOG("WIFI", "ESP8684 not connected");
+		return false;
+	}
+	digitalWrite(LED_WIFI, LOW);
+
+	// Try to flush the RX buffer in case there is some ESP8684 stuff in it
+	flush_RX();
+
+	// Set reconnection configuration (1 second interval, try forever)
+	// Clear send buffer
+	memset(esp_com_buff, 0, 512);
+	snprintf(esp_com_buff, 511, "AT+CWRECONNCFG=1,0\r\n");
+	Serial1.printf("%s", esp_com_buff);
+	Serial1.flush();
+	/** Expected response ********************
+	+CWRECONNCFG:1,5000>
+
+	OK
+	*****************************************/
+	if (wait_ok_response(10000, LED_WIFI))
+	{
+		// MYLOG("WIFI", "WiFi station reconnect set", esp_com_buff);
 		return true;
 	}
 	digitalWrite(LED_WIFI, LOW);
@@ -161,6 +198,9 @@ bool connect_mqtt(bool restart)
 {
 	if (restart)
 	{
+		// Try to flush the RX buffer in case there is some ESP8684 stuff in it
+		flush_RX();
+
 		// Clear send buffer
 		memset(esp_com_buff, 0, 512);
 		snprintf(esp_com_buff, 511, "AT+MQTTCLEAN=0\r\n");
@@ -183,6 +223,9 @@ bool connect_mqtt(bool restart)
 	char mqtt_user[64];
 	sprintf(mqtt_user, "%s%04X", custom_parameters.MQTT_USER, id);
 
+	// Try to flush the RX buffer in case there is some ESP8684 stuff in it
+	flush_RX();
+
 	// Clear send buffer
 	memset(esp_com_buff, 0, 512);
 	snprintf(esp_com_buff, 511, "AT+MQTTUSERCFG=0,1,\"%s\",\"%s\",\"%s\",0,0,\"\"\r\n",
@@ -202,6 +245,9 @@ bool connect_mqtt(bool restart)
 	}
 	digitalWrite(LED_MQTT, LOW);
 	// MYLOG("WIFI", "MQTT USR config ok: ==>%s<==\r\n", esp_com_buff);
+
+	// Try to flush the RX buffer in case there is some ESP8684 stuff in it
+	flush_RX();
 
 	// Clear send buffer
 	memset(esp_com_buff, 0, 512);
@@ -237,6 +283,9 @@ bool connect_mqtt(bool restart)
  */
 bool publish_msg(char *sub_topic, char *message)
 {
+	// Try to flush the RX buffer in case there is some ESP8684 stuff in it
+	flush_RX();
+
 	// Clear send buffer
 	memset(esp_com_buff, 0, 512);
 	snprintf(esp_com_buff, 511, "AT+MQTTPUB=0,\"%s%s\",\'%s\',0,0\r\n",
@@ -271,6 +320,9 @@ bool publish_msg(char *sub_topic, char *message)
 
 bool publish_raw_msg(char *sub_topic, uint8_t *message, size_t msg_len)
 {
+	// Try to flush the RX buffer in case there is some ESP8684 stuff in it
+	flush_RX();
+
 	// Clear send buffer
 	memset(esp_com_buff, 0, 512);
 	snprintf(esp_com_buff, 511, "AT+MQTTPUBRAW=0,\"%s%s\",%d,0,0\r\n",
@@ -350,4 +402,21 @@ bool wait_ok_response(time_t timeout, uint8_t pin, char *wait_for)
 	}
 	digitalWrite(pin, LOW);
 	return false;
+}
+
+/**
+ * @brief Flush RX buffer from left-over ESP8684 data
+ * 
+ */
+void flush_RX(void)
+{
+	// Try to flush the RX buffer in case there is some ESP8684 stuff in it
+	if (Serial1.available())
+	{
+		while (Serial1.available())
+		{
+			Serial1.read();
+			delay(10);
+		}
+	}
 }

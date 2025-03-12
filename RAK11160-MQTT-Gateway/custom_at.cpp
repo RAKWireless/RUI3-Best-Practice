@@ -45,7 +45,7 @@ int wifi_setup_handler(SERIAL_PORT port, char *cmd, stParam *param);
 bool init_wifi_at(void)
 {
 	return api.system.atMode.add((char *)"WIFI",
-								 (char *)"Set/Get the WiFi and MQTT settings",
+								 (char *)"Set/Get WiFi/MQTT settings",
 								 (char *)"WIFI", wifi_setup_handler,
 								 RAK_ATCMD_PERM_WRITE | RAK_ATCMD_PERM_READ);
 }
@@ -103,20 +103,20 @@ bool get_at_setting(void)
 	uint8_t *flash_value = (uint8_t *)&temp_params.valid_flag;
 	if (!api.system.flash.get(0, flash_value, sizeof(custom_param_s)))
 	{
-		MYLOG("AT_CMD", "Failed to read send interval from Flash");
+		// MYLOG("AT_CMD", "Failed to read send interval from Flash");
 		return false;
 	}
 	// MYLOG("AT_CMD", "Got flag: %02X", temp_params.valid_flag);
 	if (flash_value[0] != 0xAA)
 	{
-		MYLOG("AT_CMD", "No valid settings found, set to default");
+		// MYLOG("AT_CMD", "No valid settings found, set to default");
 		custom_parameters.valid_flag = 0xAA;
-		snprintf(custom_parameters.MQTT_WIFI_APN, 32, "WIFI_APN");
-		snprintf(custom_parameters.MQTT_WIFI_PW, 32, "WIFI_PW");
-		snprintf(custom_parameters.MQTT_USER, 32, "MQTT_USER");
-		snprintf(custom_parameters.MQTT_USERNAME, 32, "MQTT_USERNAME");
-		snprintf(custom_parameters.MQTT_PASSWORD, 32, "MQTT_PASSWORD");
-		snprintf(custom_parameters.MQTT_URL, 32, "MQTT_URL");
+		snprintf(custom_parameters.MQTT_WIFI_APN, 32, "APN");
+		snprintf(custom_parameters.MQTT_WIFI_PW, 32, "PW");
+		snprintf(custom_parameters.MQTT_USER, 32, "USER");
+		snprintf(custom_parameters.MQTT_USERNAME, 32, "USERNAME");
+		snprintf(custom_parameters.MQTT_PASSWORD, 32, "PASSWORD");
+		snprintf(custom_parameters.MQTT_URL, 32, "URL");
 		snprintf(custom_parameters.MQTT_PORT, 32, "1883");
 		snprintf(custom_parameters.MQTT_PUB, 32, "test/");
 		save_at_setting();

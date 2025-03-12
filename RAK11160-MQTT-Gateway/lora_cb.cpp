@@ -20,14 +20,14 @@ void recv_cb(rui_lora_p2p_recv_t data)
 	// Add received data into FiFo Queue
 	if (has_wifi_conn && has_mqtt_conn)
 	{
+		MYLOG("RX-P2P-CB", "%d FiFo entries ", Fifo.getSize());
 		if (!Fifo.enQueue(data.Buffer, data.BufferSize))
 		{
-			// interrupts();
 			MYLOG("RX-P2P-CB", "FiFo full");
 			return;
 		}
 	}
-	MYLOG("RX-P2P-CB", "%d FiFo entries ", Fifo.getSize());
+	// MYLOG("RX-P2P-CB", "%d FiFo entries ", Fifo.getSize());
 	if (!wifi_sending)
 	{
 		MYLOG("RX-P2P-CB", "Handle Fifo");

@@ -16,7 +16,7 @@ bool has_wifi_conn = false;
 bool has_mqtt_conn = false;
 
 /** WiFi active flag */
-bool wifi_sending = false;
+volatile bool wifi_sending = false;
 
 /** Queue with received data packets (max 20, each 128 bytes long) */
 ArrayQueue Fifo;
@@ -169,6 +169,7 @@ void send_handler(void *)
 
 			// Remove entry from queue
 			Fifo.deQueue();
+			MYLOG("SEND", "%d FiFo entries left", Fifo.getSize());
 		}
 		digitalWrite(LED_WIFI, LOW);
 	}

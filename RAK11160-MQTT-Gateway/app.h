@@ -39,6 +39,7 @@
 			Serial.printf("[%s] ", tag); \
 		Serial.printf(__VA_ARGS__);      \
 		Serial.printf("\n");             \
+		Serial.flush();                  \
 	} while (0);                         \
 	delay(100)
 #else
@@ -61,7 +62,7 @@ extern uint8_t rcvd_buffer[];
 extern uint16_t rcvd_buffer_size;
 extern bool has_wifi_conn;
 extern bool has_mqtt_conn;
-extern bool wifi_sending;
+extern volatile bool wifi_sending;
 extern char json_buffer[];
 extern ArrayQueue Fifo;
 
@@ -86,4 +87,3 @@ struct custom_param_s
 
 // Custom flash parameters
 extern custom_param_s custom_parameters;
-
