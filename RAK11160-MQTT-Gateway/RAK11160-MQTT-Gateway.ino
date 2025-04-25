@@ -114,6 +114,7 @@ void loop(void)
  */
 void send_handler(void *)
 {
+	api.system.timer.stop(RAK_TIMER_0);
 	digitalWrite(LED_WIFI, HIGH);
 	if (!has_wifi_conn || !has_mqtt_conn)
 	{
@@ -130,7 +131,7 @@ void send_handler(void *)
 		digitalWrite(LED_MQTT, HIGH);
 		while (!Fifo.isEmpty())
 		{
-			MYLOG("SEND", "%d FiFo entries ", Fifo.getSize());
+			MYLOG("SEND", "on entry %d FiFo entries ", Fifo.getSize());
 			// Get last entry from the Fifo queue
 			uint16_t buffer_size = Fifo.getPayloadSize();
 			MYLOG("SEND", "Payload size %d", buffer_size);
@@ -169,7 +170,7 @@ void send_handler(void *)
 
 			// Remove entry from queue
 			Fifo.deQueue();
-			MYLOG("SEND", "%d FiFo entries left", Fifo.getSize());
+			MYLOG("SEND", "On exit %d FiFo entries left", Fifo.getSize());
 		}
 		digitalWrite(LED_WIFI, LOW);
 	}

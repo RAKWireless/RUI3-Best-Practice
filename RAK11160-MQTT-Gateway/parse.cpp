@@ -208,7 +208,7 @@ size_t parse(uint8_t *data, uint16_t data_len)
 	// MYLOG("PARSE", "Finished parsing");
 	size_t packet_size = serializeJson(note_json, json_buffer);
 
-	MYLOG("PARSE", "\nJSON: %d bytes %s\n", packet_size, json_buffer);
+	MYLOG("PARSE", "%d bytes %s\n", packet_size, json_buffer);
 
 	return packet_size;
 }

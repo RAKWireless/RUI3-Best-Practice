@@ -398,7 +398,7 @@ bool wait_ok_response(time_t timeout, uint8_t pin, char *wait_for)
 			}
 		}
 		digitalWrite(pin, !digitalRead(pin));
-		delay(100);
+		delay(10);
 	}
 	digitalWrite(pin, LOW);
 	return false;

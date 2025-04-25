@@ -33,7 +33,7 @@ void recv_cb(rui_lora_p2p_recv_t data)
 		MYLOG("RX-P2P-CB", "Handle Fifo");
 		wifi_sending = true;
 		// Activate send to WiFi function
-		api.system.timer.start(RAK_TIMER_0, 100, NULL);
+		api.system.timer.start(RAK_TIMER_0, 250, NULL);
 	}
 }
 
