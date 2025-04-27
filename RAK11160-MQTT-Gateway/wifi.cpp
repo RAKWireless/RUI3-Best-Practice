@@ -11,7 +11,7 @@
 #include "app.h"
 
 /** WiFi communication buffer */
-char esp_com_buff[512];
+char esp_com_buff[1024];
 
 // Forward declaration
 void flush_RX(void);
@@ -121,7 +121,7 @@ bool connect_wifi(void)
 
 	// Set connection mode to Station
 	// Clear send buffer
-	memset(esp_com_buff, 0, 512);
+	memset(esp_com_buff, 0, 1024);
 	snprintf(esp_com_buff, 511, "AT+CWMODE=1,1\r\n");
 	Serial1.printf("%s", esp_com_buff);
 	Serial1.flush();
@@ -132,7 +132,7 @@ bool connect_wifi(void)
 	*****************************************/
 	if (!wait_ok_response(10000, LED_WIFI))
 	{
-		MYLOG("WIFI", "WiFi station mode failed", esp_com_buff);
+		MYLOG("WIFI", "WiFi station mode failed: %s", esp_com_buff);
 		return false;
 	}
 	digitalWrite(LED_WIFI, LOW);
@@ -142,7 +142,7 @@ bool connect_wifi(void)
 
 	// Set AP name and password
 	// Clear send buffer
-	memset(esp_com_buff, 0, 512);
+	memset(esp_com_buff, 0, 1024);
 	snprintf(esp_com_buff, 511, "AT+CWJAP=\"%s\",\"%s\"\r\n", custom_parameters.MQTT_WIFI_APN, custom_parameters.MQTT_WIFI_PW);
 	// MYLOG("WIFI", "Connect with ==>%s<==", esp_com_buff);
 	Serial1.printf("%s", esp_com_buff);
@@ -157,8 +157,7 @@ bool connect_wifi(void)
 	*****************************************/
 	if (!wait_ok_response(10000, LED_WIFI))
 	{
-		// MYLOG("WIFI", "ESP8684 connected: ==>%s<==\r\n", esp_com_buff);
-		MYLOG("WIFI", "ESP8684 not connected");
+		MYLOG("WIFI", "ESP8684 not connected: ==>%s<==\r\n", esp_com_buff);
 		return false;
 	}
 	digitalWrite(LED_WIFI, LOW);
@@ -168,7 +167,7 @@ bool connect_wifi(void)
 
 	// Set reconnection configuration (1 second interval, try forever)
 	// Clear send buffer
-	memset(esp_com_buff, 0, 512);
+	memset(esp_com_buff, 0, 1024);
 	snprintf(esp_com_buff, 511, "AT+CWRECONNCFG=1,0\r\n");
 	Serial1.printf("%s", esp_com_buff);
 	Serial1.flush();
@@ -177,9 +176,40 @@ bool connect_wifi(void)
 
 	OK
 	*****************************************/
+	if (!wait_ok_response(10000, LED_WIFI))
+	{
+		MYLOG("WIFI", "ESP8684 not connected: ==>%s<==\r\n", esp_com_buff);
+		return false;
+	}
+
+	// Check protocol
+	// Clear send buffer
+	memset(esp_com_buff, 0, 1024);
+	snprintf(esp_com_buff, 511, "AT+CWSTAPROTO?\r\n");
+	Serial1.printf("%s", esp_com_buff);
+	Serial1.flush();
+	/** Expected response ********************
+	+RFPOWER:1,5000>
+
+	OK
+	*****************************************/
+	wait_ok_response(10000, LED_WIFI);
+	MYLOG("WIFI", "WiFi protocol: ==>%s<==\r\n", esp_com_buff);
+
+	// Set RF power
+	// Clear send buffer
+	memset(esp_com_buff, 0, 1024);
+	snprintf(esp_com_buff, 511, "AT+RFPOWER=84\r\n");
+	Serial1.printf("%s", esp_com_buff);
+	Serial1.flush();
+	/** Expected response ********************
+	+RFPOWER:1,5000>
+
+	OK
+	*****************************************/
 	if (wait_ok_response(10000, LED_WIFI))
 	{
-		// MYLOG("WIFI", "WiFi station reconnect set", esp_com_buff);
+		MYLOG("WIFI", "WiFi station RF power set: ==>%s<==\r\n", esp_com_buff);
 		return true;
 	}
 	digitalWrite(LED_WIFI, LOW);
@@ -202,7 +232,7 @@ bool connect_mqtt(bool restart)
 		flush_RX();
 
 		// Clear send buffer
-		memset(esp_com_buff, 0, 512);
+		memset(esp_com_buff, 0, 1024);
 		snprintf(esp_com_buff, 511, "AT+MQTTCLEAN=0\r\n");
 		// MYLOG("WIFI", "MQTT Clean with ==>%s<==", esp_com_buff);
 		Serial1.printf("%s", esp_com_buff);
@@ -227,7 +257,7 @@ bool connect_mqtt(bool restart)
 	flush_RX();
 
 	// Clear send buffer
-	memset(esp_com_buff, 0, 512);
+	memset(esp_com_buff, 0, 1024);
 	snprintf(esp_com_buff, 511, "AT+MQTTUSERCFG=0,1,\"%s\",\"%s\",\"%s\",0,0,\"\"\r\n",
 			 mqtt_user, custom_parameters.MQTT_USERNAME, custom_parameters.MQTT_PASSWORD);
 	// MYLOG("WIFI", "MQTT USR setup with ==>%s<==", esp_com_buff);
@@ -250,7 +280,7 @@ bool connect_mqtt(bool restart)
 	flush_RX();
 
 	// Clear send buffer
-	memset(esp_com_buff, 0, 512);
+	memset(esp_com_buff, 0, 1024);
 	snprintf(esp_com_buff, 511, "AT+MQTTCONN=0,\"%s\",%s,0\r\n",
 			 custom_parameters.MQTT_URL, custom_parameters.MQTT_PORT);
 	// MYLOG("WIFI", "MQTT Connect with ==>%s<==", esp_com_buff);
@@ -287,7 +317,7 @@ bool publish_msg(char *sub_topic, char *message)
 	flush_RX();
 
 	// Clear send buffer
-	memset(esp_com_buff, 0, 512);
+	memset(esp_com_buff, 0, 1024);
 	snprintf(esp_com_buff, 511, "AT+MQTTPUB=0,\"%s%s\",\'%s\',0,0\r\n",
 			 custom_parameters.MQTT_PUB, sub_topic, message);
 	// MYLOG("WIFI", "MQTT Publish ==>%s<==", esp_com_buff);
@@ -324,7 +354,7 @@ bool publish_raw_msg(char *sub_topic, uint8_t *message, size_t msg_len)
 	flush_RX();
 
 	// Clear send buffer
-	memset(esp_com_buff, 0, 512);
+	memset(esp_com_buff, 0, 1024);
 	snprintf(esp_com_buff, 511, "AT+MQTTPUBRAW=0,\"%s%s\",%d,0,0\r\n",
 			 custom_parameters.MQTT_PUB, sub_topic, msg_len);
 	// MYLOG("WIFI", "MQTT Publish Raw ==>%s<==", esp_com_buff);
@@ -372,7 +402,7 @@ bool wait_ok_response(time_t timeout, uint8_t pin, char *wait_for)
 	bool got_ok = false;
 
 	// Clear TX buffer
-	memset(esp_com_buff, 0, 512);
+	memset(esp_com_buff, 0, 1024);
 
 	while ((millis() - start) < timeout)
 	{
@@ -383,13 +413,14 @@ bool wait_ok_response(time_t timeout, uint8_t pin, char *wait_for)
 			// Serial.flush();
 			esp_com_buff[buff_idx] = rcvd;
 			buff_idx++;
-			if (buff_idx == 512)
+			if (buff_idx == 1024)
 			{
+				esp_com_buff[1023] = 0;
 				digitalWrite(pin, LOW);
 				// Buffer overflow, return false
 				return false;
 			}
-
+			esp_com_buff[buff_idx] = 0;
 			if (strstr(esp_com_buff, wait_for) != NULL)
 			{
 				// Serial.println("RX OK");
