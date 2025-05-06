@@ -6,9 +6,10 @@
 ----
 ----
 #### ⚠️ Important note about RUI3 version compatibility 
-The examples require RUI3 V4.1.1.    
+The examples require RUI3 V4.2.1.    
 _**Older RUI3 versions do not support the LinkCheck functionality!**_    
 _**In addition the format of API calls for LoRa P2P have changed in RUI3 V4.1.1!**_     
+_**Older RUI3 versions do not allow to set low power mode level with api.system.lpmlvl.set(2);**_
 
 The examples for RUI3 V4.1.0 and older versions are in the [branch V4.1.0-older](https://github.com/RAKWireless/RUI3-Best-Practice/tree/V4.1.0-older).        
 

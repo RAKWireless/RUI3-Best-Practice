@@ -228,6 +228,10 @@ void setup()
 	}
 
 	// Enable low power mode
+#if defined(_VARIANT_RAK3172_) || defined(_VARIANT_RAK3172_SIP_)
+	/// \todo REQUIRES BSP VERSION 4.2.1
+	api.system.lpmlvl.set(2);
+#endif
 	api.system.lpm.set(1);
 
 	// If available, enable BLE advertising for 30 seconds and open the BLE UART channel
