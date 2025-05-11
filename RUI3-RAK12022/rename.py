@@ -34,9 +34,6 @@ try:
 except:
 	output = 'build'
 
-
-print("Version " + version)
-
 # Check if the destination directory exists
 if not os.path.exists('./'+output): 
     os.makedirs('./'+output) 
@@ -44,8 +41,10 @@ if not os.path.exists('./'+output):
 
 # Specify the source file, the destination for the copy, and the new name
 source_file = './'+output+'/'+sketch+'.hex'
+source_file_bin = './'+output+'/'+sketch+'.bin'
 destination_directory = './generated/'
 new_file_name = project+'_V'+version+'.hex'
+new_file_name_bin = project+'_V'+version+'.bin'
 new_zip_name = project+'_V'+version+'.zip'
 
 if os.path.isfile(destination_directory+new_file_name):
@@ -53,6 +52,14 @@ if os.path.isfile(destination_directory+new_file_name):
 		os.remove(destination_directory+new_file_name)
 	except:
 		print('Cannot delete '+destination_directory+new_file_name)
+	# finally:
+	# 	print('Delete '+destination_directory+new_file_name)
+
+if os.path.isfile(destination_directory+new_file_name_bin):
+	try:
+		os.remove(destination_directory+new_file_name_bin)
+	except:
+		print('Cannot delete '+destination_directory+new_file_name_bin)
 	# finally:
 	# 	print('Delete '+destination_directory+new_file_name)
 
@@ -93,10 +100,18 @@ except:
 base_name = os.path.basename(source_file)
 
 # print("Base name " + base_name)
+base_name_bin = os.path.basename(source_file_bin)
+
+try:
+	shutil.copy2(source_file_bin, destination_directory)
+except:
+	print('Cannot copy '+source_file_bin +' to '+destination_directory)
 
 # Construct the paths to the copied file and the new file name
 copied_file = os.path.join(destination_directory, base_name)
+copied_file_bin = os.path.join(destination_directory, base_name_bin)
 new_file = os.path.join(destination_directory, new_file_name)
+new_file_bin = os.path.join(destination_directory, new_file_name_bin)
 bin_name = sketch+'.bin'
 zip_name = project+'_V'+version+'.zip'
 
@@ -128,4 +143,8 @@ try:
 	os.rename(copied_file, new_file)
 except:
 	print('Cannot rename '+copied_file +' to '+new_file)
+try:
+	os.rename(copied_file_bin, new_file_bin)
+except:
+	print('Cannot rename '+copied_file_bin +' to '+new_file_bin)
 

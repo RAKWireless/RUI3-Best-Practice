@@ -4,7 +4,7 @@
     "output": "build",
     "postbuild": "python rename.py",
     "version": "1.0.1",
-    "project": "RUI3-Low-Power",
+    "project": "RUI3-PT100",
     "sketch": "RUI3-RAK12022.ino",
-    "port": "COM24"
+    "port": "COM4"
 }
