@@ -158,7 +158,9 @@ A door or window alarm system using the RAK13011 magnetic relay switch module. T
 Example code for using the RAK5811 0-5V analog input module with RUI3. For lowest power consumption, the RAK5811 is powered down until a data reading is required. The interval time for reading the data can be setup with AT command.    
 
 ## [RUI3-RAK12022](./RUI3-RAK12022)
-Example code for using the RAK12022 PT100 sensor module with RUI3. For lowest power consumption, the RAK120221 is powered down until a data reading is required. The interval time for reading the data can be setup with AT command.    
+Example code for using the RAK12022 PT100 sensor module with RUI3. For lowest power consumption, the RAK12022 is powered down until a data reading is required. The interval time for reading the data can be setup with AT command.    
+
+⚠️ DOES NOT WORK WITH RAK3372 because required GPIO is not available
 
 ## [RUI3-Sensor-Node-Air-Quality](./RUI3-Sensor-Node-Air-Quality)
 A sensor application that combines temperature, humidity, barometric pressure, CO2 and VOC sensing. It detect automatically which sensors are attached and adjusts its payload to the available sensor data. It supports WisBlock RAK1906, RAK12037 and RAK12047 sensor modules
