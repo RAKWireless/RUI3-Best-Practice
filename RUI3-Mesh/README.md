@@ -110,6 +110,9 @@ struct data_msg_s
 	uint8_t data[243];	 // 17
 };
 ```
+⚠️ WARNING
+If this structure is changed or parts are removed the **DATA_HEADER_SIZE** in mesh.h must be changed to the new header size.
+
 ### Marker
 Just 3 bytes to mark the data packet, can be removed or freely changed
 
@@ -126,12 +129,12 @@ There are 6 message types
 #define LORA_MAP_REQ 5
 ```
 
-LORA_INVALID should never happen
-LORA_DIRECT is a direct message to a destination with a hop of 1
-LORA_FORWARD is a direct message to a destination with a hop of > 1
-LORA_BROADCAST is a broadcast message to all nodes in the net
-LORA_NODEMAP is a message with a node map, internally used by the mesh 
-LORA_MAP_REQ is a broadcast message requesting a node map from other nodes
+LORA_INVALID should never happen    
+LORA_DIRECT is a direct message to a destination with a hop of 1    
+LORA_FORWARD is a direct message to a destination with a hop of > 1    
+LORA_BROADCAST is a broadcast message to all nodes in the net    
+LORA_NODEMAP is a message with a node map, internally used by the mesh     
+LORA_MAP_REQ is a broadcast message requesting a node map from other nodes    
 
 ### Destination address
 The node adress that this package is sent to
@@ -272,6 +275,10 @@ Important step here is to set the LoRa transceiver to permanent RX mode. Here th
 
 ```
 ### Sending data packets
+
+#### ⚠️ INFO
+The example application does not send data automatically unless it is activated with an AT command.    
+_**`ATC+SENDINT=30`**_ sets the interval to send data to random nodes in the Mesh network every 30 seconds.
 
 To send data each node has two options:
 1. Send the data to a specific node address
