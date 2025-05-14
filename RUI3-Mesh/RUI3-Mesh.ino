@@ -224,10 +224,12 @@ void timed_loop(void *)
 			msg_cnt++;
 
 			convert_value.l_value = msg_cnt;
-			memcpy(&data_buffer[0], convert_value.b_values, 8);
-			memcpy(&data_buffer[8], convert_value.b_values, 8);
+			memcpy(&data_buffer[0], &convert_value.b_values[0], 8);
+			memcpy(&data_buffer[8], &convert_value.b_values[1], 8);
 			convert_value.l_value = g_this_device_addr;
-			memcpy(&data_buffer[16], convert_value.b_values, 8);
+			memcpy(&data_buffer[16], &convert_value.b_values[0], 8);
+
+			uint8_t data_size = 24; // 3 times 8 bytes = 24
 
 			// Select a random node from the map
 			uint8_t selected_node_idx = 0;
@@ -256,37 +258,42 @@ void timed_loop(void *)
 			else
 			{
 				// Get the number of nodes in the map
-				uint8_t node_index = nodes_in_map() + 1;
+				uint8_t node_index = nodes_in_map();
+				Serial.printf("%d nodes in map\r\n", node_index);
 				// MYLOG("APP", "%d nodes in the map", node_index);
 
 				// Check how many nodes are in the map
-				if (node_index > 2)
+				if (node_index > 1)
 				{
 					// Multiple nodes, select a random one
-					selected_node_idx = (uint8_t)random(1, (long)node_index - 1);
-					use_broadcast = false;
-					MYLOG("APP", "Using node %d", selected_node_idx);
+					selected_node_idx = (uint8_t)random(0, (long)node_index - 1);
+					node_addr = get_node_addr(selected_node_idx);
+					use_broadcast = node_addr == 0x00 ? true : false;
+					// MYLOG("APP", "Using node %d", selected_node_idx);
+					Serial.printf("Send to random node %8X\r\n", node_addr);
 				}
-				else if (node_index == 2)
+				else if (node_index == 1)
 				{
 					// Only 2 nodes in the map, send to the other one
-					selected_node_idx = 1;
-					use_broadcast = false;
-					MYLOG("APP", "Using node 1");
+					selected_node_idx = 0;
+					node_addr = get_node_addr(selected_node_idx);
+					use_broadcast = node_addr == 0x00 ? true: false;
+					// MYLOG("APP", "Using node 1");
+					Serial.printf("Send to only other node %8X\r\n", node_addr);
 				}
 				else
 				{
 					// No other node, lets send a broadcast
 					selected_node_idx = 0;
-					use_broadcast = false;
-					MYLOG("APP", "Using broadcast");
+					node_addr = 0x00000000;
+					use_broadcast = true;
+					// MYLOG("APP", "Using broadcast");
+					Serial.printf("Sending broadcast\r\n");
 				}
-				node_addr = get_node_addr(selected_node_idx);
 				// MYLOG("APP", "Got receiver address %08lX", node_addr);
 			}
 
 			// Enqueue the data package for sending
-			uint8_t data_size = 24;
 			if (!send_to_mesh(use_broadcast, node_addr, (uint8_t *)data_buffer, data_size))
 			{
 				MYLOG("APP", "Error enqueue packet");
@@ -321,19 +328,18 @@ void timed_loop(void *)
  * @param rxRssi		Signal strength while the package was received
  * @param rxSnr			Signal to noise ratio while the package was received
  */
-void on_mesh_data(uint32_t fromID, uint8_t *rxPayload, uint16_t rxSize, int16_t rxRssi, int8_t rxSnr)
+void on_mesh_data(uint32_t fromID, uint8_t *rxPayload, uint16_t rxSize, int16_t rxRssi, int8_t rxSnr, bool isBroadcast)
 {
 	Serial.println("-------------------------------------");
-	Serial.printf("Got data from node %08lX\n", fromID);
+	Serial.printf("Got %sdata from node %08lX\n", isBroadcast ? "broadcast " : "", fromID);
 
 	longlong_byte_u new_counter;
 
 	// Demo output of the received data packet
-	memcpy(new_counter.b_values, &rxPayload[0], 8);
+	memcpy(&new_counter.b_values[0], &rxPayload[0], 8);
+	memcpy(&new_counter.b_values[1], &rxPayload[8], 8);
 	Serial.printf("Counter %Ld\n", new_counter.l_value);
-	memcpy(new_counter.b_values, &rxPayload[8], 8);
-	Serial.printf("Sensor Value 1 %Ld\n", new_counter.l_value);
-	memcpy(new_counter.b_values, &rxPayload[16], 8);
+	memcpy(&new_counter.b_values[0], &rxPayload[16], 8);
 	Serial.printf("Device %08lX\n", new_counter.l_value);
 
 	Serial.println("-------------------------------------");

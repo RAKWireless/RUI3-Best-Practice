@@ -365,7 +365,7 @@ void mesh_task(void *unused)
 
 			subs_len = MAP_HEADER_SIZE + (subs_len * 5);
 
-			Serial.printf("Size %d\n", subs_len);
+			MYLOG("MESH", "Header Size %d", subs_len);
 
 			if (!add_send_request((data_msg_s *)&map_sync_msg, subs_len))
 			{
@@ -531,6 +531,7 @@ void mesh_check_rx(void)
 					}
 					else if (thisDataMsg->type == LORA_DIRECT)
 					{
+						MYLOG("MESH", "Direct message from %08lX", thisMsg->from);
 						// MYLOG("MESH", "From %08lX", thisDataMsg->from);
 						// MYLOG("MESH", "Dest %08lX", thisDataMsg->dest);
 
@@ -555,11 +556,11 @@ void mesh_check_rx(void)
 							{
 								if (thisDataMsg->orig == 0x00)
 								{
-									_mesh_events->data_avail_cb(thisDataMsg->from, thisDataMsg->data, rx_pckg.rx_size - DATA_HEADER_SIZE, rx_pckg.rx_rssi, rx_pckg.rx_snr);
+									_mesh_events->data_avail_cb(thisDataMsg->from, thisDataMsg->data, rx_pckg.rx_size - DATA_HEADER_SIZE, rx_pckg.rx_rssi, rx_pckg.rx_snr, false);
 								}
 								else
 								{
-									_mesh_events->data_avail_cb(thisDataMsg->orig, thisDataMsg->data, rx_pckg.rx_size - DATA_HEADER_SIZE, rx_pckg.rx_rssi, rx_pckg.rx_snr);
+									_mesh_events->data_avail_cb(thisDataMsg->orig, thisDataMsg->data, rx_pckg.rx_size - DATA_HEADER_SIZE, rx_pckg.rx_rssi, rx_pckg.rx_snr, false);
 								}
 							}
 						}
@@ -578,6 +579,7 @@ void mesh_check_rx(void)
 					}
 					else if (thisDataMsg->type == LORA_FORWARD)
 					{
+						MYLOG("MESH", "Forward message from %08lX", thisMsg->from);
 #ifndef SHOW_MAP
 						sprintf(line_str, "Forw %08LX R %d S %d", thisMsg->from, rx_pckg.rx_rssi, rx_pckg.rx_snr);
 						rak1921_add_line(line_str);
@@ -598,11 +600,11 @@ void mesh_check_rx(void)
 							{
 								if (thisDataMsg->orig == 0x00)
 								{
-									_mesh_events->data_avail_cb(thisDataMsg->from, thisDataMsg->data, rx_pckg.rx_size - DATA_HEADER_SIZE, rx_pckg.rx_rssi, rx_pckg.rx_snr);
+									_mesh_events->data_avail_cb(thisDataMsg->from, thisDataMsg->data, rx_pckg.rx_size - DATA_HEADER_SIZE, rx_pckg.rx_rssi, rx_pckg.rx_snr, false);
 								}
 								else
 								{
-									_mesh_events->data_avail_cb(thisDataMsg->orig, thisDataMsg->data, rx_pckg.rx_size - DATA_HEADER_SIZE, rx_pckg.rx_rssi, rx_pckg.rx_snr);
+									_mesh_events->data_avail_cb(thisDataMsg->orig, thisDataMsg->data, rx_pckg.rx_size - DATA_HEADER_SIZE, rx_pckg.rx_rssi, rx_pckg.rx_snr, false);
 								}
 							}
 						}
@@ -652,6 +654,7 @@ void mesh_check_rx(void)
 					}
 					else if (thisDataMsg->type == LORA_BROADCAST)
 					{
+						MYLOG("MESH", "Broadcast message from %08lX", thisMsg->from);
 #ifndef SHOW_MAP
 						sprintf(line_str, "BRDC %08LX R %d S %d", thisMsg->from, rx_pckg.rx_rssi, rx_pckg.rx_snr);
 						rak1921_add_line(line_str);
@@ -681,7 +684,7 @@ void mesh_check_rx(void)
 						// MYLOG("MESH", "Got data broadcast size %ld", tempSize);
 						if ((_mesh_events != NULL) && (_mesh_events->data_avail_cb != NULL))
 						{
-							_mesh_events->data_avail_cb(thisDataMsg->from, thisDataMsg->data, rx_pckg.rx_size - DATA_HEADER_SIZE, rx_pckg.rx_rssi, rx_pckg.rx_snr);
+							_mesh_events->data_avail_cb(thisDataMsg->from, thisDataMsg->data, rx_pckg.rx_size - DATA_HEADER_SIZE, rx_pckg.rx_rssi, rx_pckg.rx_snr, true);
 						}
 						// Check if we know that node
 						if (!check_node(thisDataMsg->from))

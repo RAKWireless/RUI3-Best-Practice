@@ -302,7 +302,7 @@ bool get_node(uint8_t node_num, uint32_t &node_id, uint32_t &first_hop, uint8_t 
  */
 uint32_t get_node_addr(uint8_t node_num)
 {
-	if (node_num >= nodes_in_map())
+	if (node_num > nodes_in_map())
 	{
 		return 0x00;
 	}

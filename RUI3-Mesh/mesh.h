@@ -67,8 +67,10 @@ typedef struct
 	 * 			SNR value computed while receiving the frame [dB]
 	 *                     FSK : N/A ( set to 0 )
 	 *                     LoRa: SNR value in dB
+	 * @param isBroadcast
+	 * 			Direct message or broadcast message
 	 */
-	void (*data_avail_cb)(uint32_t from_id, uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr);
+	void (*data_avail_cb)(uint32_t from_id, uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr, bool isBroadcast);
 
 	/**
 	 * Nodes list change callback prototype.

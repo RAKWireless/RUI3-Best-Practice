@@ -78,6 +78,10 @@ bool init_rak1921(void)
  */
 void rak1921_write_header(char *header_line)
 {
+	if (!has_rak1921)
+	{
+		return;
+	}
 	// taskENTER_CRITICAL();
 	oled_display.setFont(ArialMT_Plain_10);
 
@@ -103,6 +107,10 @@ void rak1921_write_header(char *header_line)
  */
 void rak1921_add_line(char *line)
 {
+	if (!has_rak1921)
+	{
+		return;
+	}
 	// taskENTER_CRITICAL();
 	if (current_line == NUM_OF_LINES)
 	{
@@ -131,6 +139,10 @@ void rak1921_add_line(char *line)
  */
 void rak1921_show(void)
 {
+	if (!has_rak1921)
+	{
+		return;
+	}
 	oled_display.setColor(BLACK);
 	oled_display.fillRect(0, STATUS_BAR_HEIGHT + 1, OLED_WIDTH, OLED_HEIGHT);
 
@@ -149,6 +161,10 @@ void rak1921_show(void)
  */
 void rak1921_clear(void)
 {
+	if (!has_rak1921)
+	{
+		return;
+	}
 	oled_display.setColor(BLACK);
 	oled_display.fillRect(0, STATUS_BAR_HEIGHT + 1, OLED_WIDTH, OLED_HEIGHT);
 	current_line = 0;
@@ -163,6 +179,10 @@ void rak1921_clear(void)
  */
 void rak1921_write_line(int16_t line, int16_t y_pos, String text)
 {
+	if (!has_rak1921)
+	{
+		return;
+	}
 	oled_display.drawString(y_pos, (line * LINE_HEIGHT) + STATUS_BAR_HEIGHT + 1, text);
 }
 
@@ -172,5 +192,9 @@ void rak1921_write_line(int16_t line, int16_t y_pos, String text)
  */
 void rak1921_display(void)
 {
+	if (!has_rak1921)
+	{
+		return;
+	}
 	oled_display.display();
 }

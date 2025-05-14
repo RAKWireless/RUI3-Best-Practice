@@ -87,6 +87,63 @@ _**The initialization of the mesh map in each node is handled in the background.
 
 ----
 
+## Data packet structure
+
+The data packet is divided into 6 parts    
+1) marker
+2) message type
+3) destination address
+4) sender address
+5) original sender address
+6) payload
+
+```cpp
+struct data_msg_s
+{
+	uint8_t mark1 = 'L'; // 1
+	uint8_t mark2 = 'o'; // 2
+	uint8_t mark3 = 'R'; // 3
+	uint8_t type = 0;	 // 4
+	uint32_t dest = 0;	 // 5,6,7,8
+	uint32_t from = 0;	 // 9,10,11,12
+	uint32_t orig = 0;	 // 13,14,15,16
+	uint8_t data[243];	 // 17
+};
+```
+### Marker
+Just 3 bytes to mark the data packet, can be removed or freely changed
+
+### Message type
+There are 6 message types
+
+```cpp
+/** LoRa package types */
+#define LORA_INVALID 0
+#define LORA_DIRECT 1
+#define LORA_FORWARD 2
+#define LORA_BROADCAST 3
+#define LORA_NODEMAP 4
+#define LORA_MAP_REQ 5
+```
+
+LORA_INVALID should never happen
+LORA_DIRECT is a direct message to a destination with a hop of 1
+LORA_FORWARD is a direct message to a destination with a hop of > 1
+LORA_BROADCAST is a broadcast message to all nodes in the net
+LORA_NODEMAP is a message with a node map, internally used by the mesh 
+LORA_MAP_REQ is a broadcast message requesting a node map from other nodes
+
+### Destination address
+The node adress that this package is sent to
+
+### From address
+The last node address that forwarded this package
+
+### Origin address
+The node address where the package was sent from
+
+----
+
 ## How to use the example code
 
 ### Requirements
