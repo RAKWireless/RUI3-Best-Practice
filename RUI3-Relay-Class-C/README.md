@@ -17,6 +17,10 @@ The downlink to the LoRaWAN server sends back in a programmable interval the sta
 ### ⚠️ INFORMATION    
 If used with LoRaWAN, the node has to be setup as Class C node to receive downlinks from the LoRaWAN server immediately. If set as Class A, the downlink will be only received after an uplink (heart beat) was performed and the relay status will not change immediately.    
 
+### ⚠️ INFORMATION    
+This code is able to receive multicast downlinks as well.    
+Using a multicast group allows to set multiple relays with one single downlink to multiple end devices.
+
 ----
 
 # Code sections
@@ -32,12 +36,33 @@ For LoRaWAN there are 3 callbacks for join, send and receive events.
 
 LoRaWAN join event is called when a join request was successful or failed. If it fails, it is called after all retries are used up, not on each single retry. The callback has the parameter _**`int32_t status`**_. The status is based on low level LoRaMAC stack results, at the moment the only usuable check is whether the status is 0 ==> join success or <>0 ==> join failed. It is possible to restart the join request from this callback if the attempt failed before.    
 
+In addition, after a successful network join a multicast session is enabled that allows to receive downlink packets over multicast.
+
 ```cpp
 void joinCallback(int32_t status)
 {
 	if (status != 0)
 	{
 		MYLOG("JOIN-CB", "LoRaWan OTAA - join fail! \r\n");
+
+		// Try to remove last session
+		if (api.lorawan.rmvmulc(node_mc_address[0] << 24 | node_mc_address[1] << 16 | node_mc_address[2] << 8 | node_mc_address[3]) == true)
+		{
+			MYLOG("JOIN-CB", "Remove Multicast Success");
+		}
+		else
+		{
+			MYLOG("JOIN-CB", "Remove Multicast Fail");
+		}
+		// LoRaWAN Multicast Setting
+		if (api.lorawan.addmulc(session) == true)
+		{
+			MYLOG("JOIN-CB", "Add Multicast Success");
+		}
+		else
+		{
+			MYLOG("JOIN-CB", "Add Multicast Fail");
+		}
 	}
 	else
 	{
@@ -151,6 +176,21 @@ First it checks whether the system is working in LoRaWAN mode or as a LoRa P2P m
 		api.lora.registerPRecvCallback(recv_cb);
 		api.lora.registerPSendCallback(send_cb);
 	}
+```
+
+If the device is in LoRaWAN mode, a multicast session is prepared to be able to receive multicast downlinks from the LoRaWAN server.
+```cpp
+	// Setup new multicast session
+	session.McDevclass = 2;
+	session.McAddress = node_mc_address[0] << 24 | node_mc_address[1] << 16 | node_mc_address[2] << 8 | node_mc_address[3];
+	session.McFrequency = 916600000;
+	session.McDatarate = 4;
+	session.McPeriodicity = 0;
+	session.McGroupID = 2;
+	session.entry = 0;
+
+	memcpy(session.McAppSKey, node_mc_AppSKey, 16);
+	memcpy(session.McNwkSKey, node_mc_NwkSKey, 16);
 ```
 
 Second a periodic timer is initialized to wake up the system in intervals to send a packet to the LoRaWAN server or other LoRa P2P nodes. The interval time is set with the variable **`g_send_repeat_time`**.

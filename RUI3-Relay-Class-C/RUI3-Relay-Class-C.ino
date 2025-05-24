@@ -1,11 +1,11 @@
 /**
- * @file RUI3-Modular.ino
+ * @file RUI3-Relay-Class.ino
  * @author Bernd Giesecke (bernd@giesecke.tk)
- * @brief RUI3 based code for low power practice
+ * @brief RUI3 based code for remote relay control with downlinks or multicast downlinks
  * @version 0.1
- * @date 2023-03-29
+ * @date 2025-05-24
  *
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2025
  *
  */
 #include "app.h"
@@ -34,6 +34,15 @@ WisCayenne g_solution_data(255);
 /** Relay status */
 uint8_t relay_status = LOW;
 
+/** LoRaWAN multicast session structure */
+RAK_LORA_McSession session;
+/** Multicast address */
+uint8_t node_mc_address[4] = {0x00, 0xe2, 0x27, 0x13}; // 00e22713
+/** Multicast AppSKey */
+uint8_t node_mc_AppSKey[16] = {0x93, 0x98, 0xa5, 0xe3, 0xb6, 0xd2, 0x20, 0xd6, 0x86, 0x15, 0xe0, 0xc6, 0x2d, 0xad, 0x33, 0x07}; // 9398a5e3b6d220d68615e0c62dad3307
+/** Multicast NwkSKey */
+uint8_t node_mc_NwkSKey[16] = {0xe7, 0x04, 0xca, 0x06, 0xca, 0xf0, 0xbe, 0x78, 0x15, 0x52, 0xc0, 0x4b, 0x4d, 0x46, 0xbd, 0x06}; // e704ca06caf0be781552c04b4d46bd06
+
 /**
  * @brief Callback after join request cycle
  *
@@ -45,6 +54,25 @@ void joinCallback(int32_t status)
 	if (status != 0)
 	{
 		MYLOG("JOIN-CB", "LoRaWan OTAA - join fail! \r\n");
+
+		// Try to remove last session
+		if (api.lorawan.rmvmulc(node_mc_address[0] << 24 | node_mc_address[1] << 16 | node_mc_address[2] << 8 | node_mc_address[3]) == true)
+		{
+			MYLOG("JOIN-CB", "Remove Multicast Success");
+		}
+		else
+		{
+			MYLOG("JOIN-CB", "Remove Multicast Fail");
+		}
+		// LoRaWAN Multicast Setting
+		if (api.lorawan.addmulc(session) == true)
+		{
+			MYLOG("JOIN-CB", "Add Multicast Success");
+		}
+		else
+		{
+			MYLOG("JOIN-CB", "Add Multicast Fail");
+		}
 	}
 	else
 	{
@@ -206,6 +234,20 @@ void setup()
 
 		// This application requires Class C to receive data at any time
 		api.lorawan.deviceClass.set(2);
+
+		// LoRaWan Multicast Session
+
+		// Setup new multicast session
+		session.McDevclass = 2;
+		session.McAddress = node_mc_address[0] << 24 | node_mc_address[1] << 16 | node_mc_address[2] << 8 | node_mc_address[3];
+		session.McFrequency = 916600000;
+		session.McDatarate = 4;
+		session.McPeriodicity = 0;
+		session.McGroupID = 2;
+		session.entry = 0;
+
+		memcpy(session.McAppSKey, node_mc_AppSKey, 16);
+		memcpy(session.McNwkSKey, node_mc_NwkSKey, 16);
 	}
 	else // Setup for LoRa P2P
 	{
@@ -228,7 +270,7 @@ void setup()
 	// Delay for 5 seconds to give the chance for AT+BOOT
 	delay(5000);
 
-	api.system.firmwareVersion.set("RUI3-Relay-V1.0.0");
+	api.system.firmwareVersion.set("RUI3-Relay-V1.0.1");
 
 	Serial.println("RAKwireless RUI3 Node");
 	Serial.println("------------------------------------------------------");
@@ -316,8 +358,9 @@ void setup()
  * 
  */
 void relay_handler(void *) {
-	MYLOG("DOWNLINK", "Set relay");
+	MYLOG("DOWNLINK", "Set relay to %s", relay_status == LOW ? "Off" : "On");
 	digitalWrite(RELAY_IO, relay_status);
+	digitalWrite(LED_GREEN, relay_status);
 }
 
 /**
