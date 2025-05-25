@@ -54,6 +54,11 @@ void joinCallback(int32_t status)
 	if (status != 0)
 	{
 		MYLOG("JOIN-CB", "LoRaWan OTAA - join fail! \r\n");
+	}
+	else
+	{
+		MYLOG("JOIN-CB", "LoRaWan OTAA - joined! \r\n");
+		digitalWrite(LED_BLUE, LOW);
 
 		// Try to remove last session
 		if (api.lorawan.rmvmulc(node_mc_address[0] << 24 | node_mc_address[1] << 16 | node_mc_address[2] << 8 | node_mc_address[3]) == true)
@@ -73,11 +78,6 @@ void joinCallback(int32_t status)
 		{
 			MYLOG("JOIN-CB", "Add Multicast Fail");
 		}
-	}
-	else
-	{
-		MYLOG("JOIN-CB", "LoRaWan OTAA - joined! \r\n");
-		digitalWrite(LED_BLUE, LOW);
 		sensor_handler(NULL);
 	}
 }
