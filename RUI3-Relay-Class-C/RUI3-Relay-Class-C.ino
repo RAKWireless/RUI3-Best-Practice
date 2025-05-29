@@ -10,6 +10,9 @@
  */
 #include "app.h"
 
+// set to 1 to enable multicast
+#define USE_MC 0
+
 #define RELAY_IO WB_IO4
 
 /** Packet is confirmed/unconfirmed (Set with AT commands) */
@@ -60,6 +63,7 @@ void joinCallback(int32_t status)
 		MYLOG("JOIN-CB", "LoRaWan OTAA - joined! \r\n");
 		digitalWrite(LED_BLUE, LOW);
 
+#if USE_MC == 1
 		// Try to remove last session
 		if (api.lorawan.rmvmulc(node_mc_address[0] << 24 | node_mc_address[1] << 16 | node_mc_address[2] << 8 | node_mc_address[3]) == true)
 		{
@@ -78,6 +82,7 @@ void joinCallback(int32_t status)
 		{
 			MYLOG("JOIN-CB", "Add Multicast Fail");
 		}
+#endif
 		sensor_handler(NULL);
 	}
 }
@@ -235,6 +240,7 @@ void setup()
 		// This application requires Class C to receive data at any time
 		api.lorawan.deviceClass.set(2);
 
+#if USE_MC == 1
 		// LoRaWan Multicast Session
 
 		// Setup new multicast session
@@ -248,6 +254,7 @@ void setup()
 
 		memcpy(session.McAppSKey, node_mc_AppSKey, 16);
 		memcpy(session.McNwkSKey, node_mc_NwkSKey, 16);
+#endif
 	}
 	else // Setup for LoRa P2P
 	{
@@ -355,9 +362,10 @@ void setup()
 
 /**
  * @brief Set or reset the relay, depending on last received packet
- * 
+ *
  */
-void relay_handler(void *) {
+void relay_handler(void *)
+{
 	MYLOG("DOWNLINK", "Set relay to %s", relay_status == LOW ? "Off" : "On");
 	digitalWrite(RELAY_IO, relay_status);
 	digitalWrite(LED_GREEN, relay_status);
@@ -374,7 +382,7 @@ void sensor_handler(void *)
 	digitalWrite(LED_BLUE, HIGH);
 
 	if (api.lorawan.nwm.get() == 1)
-	{ 
+	{
 		// Check if the node has joined the network
 		if (!api.lorawan.njs.get())
 		{

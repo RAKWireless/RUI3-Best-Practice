@@ -1,6 +1,6 @@
 {
     "board": "rak_rui:stm32:WisDuoRAK3172EvaluationBoard",
-    "port": "COM24",
+    "port": "COM19",
     "output": "build",
     "sketch": "RUI3-Relay-Class-C.ino",
     "configuration": "debug=l0,supportat=1,supportlora=1,supportAS923=1,supportAU915=1,supportCN470=2,supportCN779=2,supportEU433=2,supportEU868=1,supportKR920=1,supportIN865=1,supportUS915=1,supportRU864=1,supportLA915=1",
