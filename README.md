@@ -213,10 +213,14 @@ This makes it the perfect choice to build a gateway between the long range LoRa 
 In this tutorial we will use a RAK11160 to setup a gateway between a sensor node that is sending data over LoRa P2P.    
 The RAK11160 is setup to receive these data, parse it into a JSON packet and send it to an MQTT broker.    
 
-## RUI3 RAK11160 WiFi
+## [RUI3 RAK11160 WiFi](./RAK11160-WiFi)
 The WisDuo RAK11160 WisDuo provides LoRa, WiFi and BLE connectivity in one single module.    
 This makes it the perfect choice to build a gateway between the long range LoRa world and the cloud, or specifically here to an MQTT broker.    
 In this tutorial we will show how to connect the RAK11160 to WiFi AP.          
+
+## [RUI3 Environment IAQ for RAK3172](./RUI3-Env-IAQ)
+The Bosch BSEC library to calculate the IAQ level from the Bosch BME680 environment sensor is too large for the RAK3172. This example is using an alternative method to calculate the IAQ level from the sensor data the Bosch BME680 delivers.    
+The excample is using an open source code provided by David Bird. Please check the [license provided with the code](#license-for-the-bme680-iaq-algorithm) and please honor the request of the author to keep the license with the source code.
 
 ----
 
