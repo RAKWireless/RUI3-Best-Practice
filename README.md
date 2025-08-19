@@ -82,6 +82,8 @@ The following modules are supported by RUI3:
 |                                                                             | [RUI3 GNSS Location](#rui3-gnss-location)                                                   |
 | _**Tools**_                                                                 | _**Gateways**_                                                                              |
 | [RUI3-Signal-Meter-P2P-LPWAN](#rui3-signal-meter-p2p-lpwan)                 | [RUI3 RAK11160 MQTT WiFi Gateway](#rui3-rak11160-mqtt-wifi-gateway)                         |
+| _**Demo**_                                                                  |                                                                                             |
+| [RUI3-E-Ink-Demo](#rui3-e-ink-demo)                                         |                                                                                             |
 
 <!--
 - Generic
@@ -221,6 +223,9 @@ In this tutorial we will show how to connect the RAK11160 to WiFi AP.
 ## [RUI3 Environment IAQ for RAK3172](./RUI3-Env-IAQ)
 The Bosch BSEC library to calculate the IAQ level from the Bosch BME680 environment sensor is too large for the RAK3172. This example is using an alternative method to calculate the IAQ level from the sensor data the Bosch BME680 delivers.    
 The excample is using an open source code provided by David Bird. Please check the [license provided with the code](#license-for-the-bme680-iaq-algorithm) and please honor the request of the author to keep the license with the source code.
+
+## [RUI3-E-Ink-Demo](./RUI3-E-Ink-Demo)    
+A simple demo with an RAK14000 E-Ink display and buttons. It shows how to use OTAA or ABP LoRaWAN join methods, send uplinks, receive downlinks and display the status on an E-Ink display.    
 
 ----
 

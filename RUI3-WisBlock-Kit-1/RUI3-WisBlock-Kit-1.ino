@@ -65,6 +65,7 @@ void receiveCallback(SERVICE_LORA_RECEIVE_T *data)
 		Serial.printf("%02X", data->Buffer[i]);
 	}
 	Serial.print("\r\n");
+	digitalWrite(LED_BLUE, LOW);
 }
 
 /**
@@ -77,6 +78,7 @@ void linkcheckCallback(SERVICE_LORA_LINKCHECK_T *data)
 	MYLOG("LC_CB", "%s Margin %d GW# %d RSSI%d SNR %d", data->State == 0 ? "Success" : "Failed",
 		  data->DemodMargin, data->NbGateways,
 		  data->Rssi, data->Snr);
+	digitalWrite(LED_BLUE, LOW);
 }
 
 /**
@@ -103,6 +105,7 @@ void recv_cb(rui_lora_p2p_recv_t data)
 		Serial.printf("%02X", data.Buffer[i]);
 	}
 	Serial.print("\r\n");
+	digitalWrite(LED_BLUE, LOW);
 }
 
 /**
@@ -123,6 +126,7 @@ void send_cb(void)
 void cad_cb(bool result)
 {
 	MYLOG("CAD-P2P-CB", "P2P CAD reports %s", result ? "activity" : "no activity");
+	digitalWrite(LED_BLUE, LOW);
 }
 
 /**
@@ -366,7 +370,8 @@ void send_packet(void)
 	{
 		MYLOG("UPLINK", "Sending packet over LoRaWAN");
 		// Send the packet
-		if (api.lorawan.send(g_solution_data.getSize(), g_solution_data.getBuffer(), set_fPort, g_confirmed_mode, g_confirmed_retry))
+		// if (api.lorawan.send(g_solution_data.getSize(), g_solution_data.getBuffer(), set_fPort, g_confirmed_mode, g_confirmed_retry))
+		if (api.lorawan.send(g_solution_data.getSize(), g_solution_data.getBuffer(), set_fPort))
 		{
 			MYLOG("UPLINK", "Packet enqueued, size %d", g_solution_data.getSize());
 		}
