@@ -1,6 +1,6 @@
 {
     "board": "rak_rui:stm32:WisDuoRAK3172EvaluationBoard",
-    "port": "COM19",
+    "port": "COM8",
     "output": "build",
     "sketch": "RUI3-WisBlock-Kit-4.ino",
     "configuration": "debug=l0,supportat=1,supportlora=1,supportAS923=1,supportAU915=2,supportCN470=2,supportCN779=2,supportEU433=2,supportEU868=2,supportKR920=2,supportIN865=2,supportUS915=1,supportRU864=2,supportLA915=2",

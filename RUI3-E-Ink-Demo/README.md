@@ -8,6 +8,10 @@ This example code is _**NOT**_ using the loop at all. Instead it is complete eve
 
 This example is a very simple demo for LoRaWAN to use OTAA and ABP join procedures, display the status on a E-ink display and use the button to join and send packets.
 
+<center> <img src="./assets/e-ink-demo.jpg" alt="RUI3" width=60%> </center>
+
+3D printed enclosure sources can be found in [Makerworld](https://makerworld.com/en/models/1715606-rakwireless-enclosure-for-rak14000-epd-and-buttons#profileId-1820863)
+
 The code compiles on all RUI3 modules.    
 
 ----
