@@ -227,6 +227,11 @@ The excample is using an open source code provided by David Bird. Please check t
 ## [RUI3-E-Ink-Demo](./RUI3-E-Ink-Demo)    
 A simple demo with an RAK14000 E-Ink display and buttons. It shows how to use OTAA or ABP LoRaWAN join methods, send uplinks, receive downlinks and display the status on an E-Ink display.    
 
+## [RUI3-RAK17001-DC-Motor](./RUI3-RAK17001-DC-Motor)    
+This examples shows how to control a DC motor with PWM by using the RAK17001. The control of the motor is through Class C downlinks from the LoraWAN server or through LoRa P2P packets.    
+_**⚠️ INFORMATION**_    
+_**Due to a PWM bug in RUI3, this example does not work with RUI3 version V4.2.1. Use an older or newer version of RUI3 with this example.**_
+
 ----
 
 # Get RUI3 devices
