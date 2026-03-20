@@ -1,5 +1,5 @@
 {
-    "board": "rak_rui:stm32:WisDuoRAK3172EvaluationBoard",
+    "board": "rak_rui:apollo3:WisCoreRAK11720Board",
     "port": "COM31",
     "output": "build",
     "sketch": "RUI3-LowPower-Example.ino",

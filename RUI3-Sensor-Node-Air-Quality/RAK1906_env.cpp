@@ -66,7 +66,9 @@ bool init_rak1906(void)
  */
 bool read_rak1906()
 {
-	MYLOG("BME", "Reading BME680");
+	// MYLOG("BME", "Reading BME680");
+	init_rak1906();
+	delay(200);
 	if (!bme.update())
 	{
 		MYLOG("BME", "BME reading timeout");
@@ -190,26 +192,28 @@ bool init_rak1906(void)
  */
 bool read_rak1906()
 {
-	// MYLOG("BME", "Reading BME680");
-	bme.beginReading();
-	time_t wait_start = millis();
 	bool read_success = false;
-	while ((millis() - wait_start) < 5000)
-	{
-		if (bme.endReading())
-		{
-			read_success = true;
-			break;
-		}
-	}
+	init_rak1906();
+	// MYLOG("BME", "Reading BME680");
+	read_success = bme.performReading();
+	// bme.beginReading();
+	// time_t wait_start = millis();
+	// while ((millis() - wait_start) < 30000)
+	// {
+	// 	if (bme.endReading())
+	// 	{
+	// 		read_success = true;
+	// 		break;
+	// 	}
+	// }
 
 	if (!read_success)
 	{
-		// MYLOG("BME", "BME reading timeout");
+		MYLOG("BME", "BME reading timeout");
 		return false;
 	}
 
-	MYLOG("BME", "Temperature: %.2f", bme.humidity);
+	MYLOG("BME", "Temperature: %.2f", bme.temperature);
 	MYLOG("BME", "Humidity: %.2f", bme.humidity);
 	MYLOG("BME", "Barometer: %.2f", bme.pressure / 100.0);
 #if USE_GAS == 1

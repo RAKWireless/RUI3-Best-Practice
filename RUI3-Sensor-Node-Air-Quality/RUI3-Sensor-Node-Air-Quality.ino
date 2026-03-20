@@ -82,6 +82,8 @@ void joinCallback(int32_t status)
  */
 void setup()
 {
+	Serial.begin(115200);
+
 	// Setup the callbacks for joined and send finished
 	api.lorawan.registerRecvCallback(receiveCallback);
 	api.lorawan.registerSendCallback(sendCallback);
@@ -94,8 +96,6 @@ void setup()
 
 	pinMode(WB_IO2, OUTPUT);
 	digitalWrite(WB_IO2, HIGH);
-
-	Serial.begin(115200);
 
 #ifdef _VARIANT_RAK4630_
 	time_t serial_timeout = millis();
@@ -123,7 +123,7 @@ void setup()
 	init_status_at();
 
 	api.system.firmwareVer.set("RUI3-AQI");
-	MYLOG("SETUP", "RAKwireless %s Node", g_dev_name);
+	MYLOG("SETUP", "RAKwireless %s", g_dev_name);
 	MYLOG("SETUP", "Setup the device with AT commands first");
 
 	// Search for modules
@@ -206,7 +206,7 @@ void sensor_handler(void *)
  */
 void read_send_sensors(void)
 {
-	// MYLOG("SENS", "Start");
+	MYLOG("SENS", "Read Sensors");
 	digitalWrite(LED_BLUE, HIGH);
 
 	// Check if the node has joined the network

@@ -189,8 +189,8 @@ void setup()
 	// Start Serial
 	Serial.begin(115200);
 
-	// Delay for 5 seconds to give the chance for AT+BOOT
-	delay(5000);
+	// Delay for 10 seconds to give the chance for AT+BOOT
+	delay(10000);
 
 	api.system.firmwareVersion.set("RUI3-PT100-V1.0.0");
 
@@ -223,6 +223,7 @@ void setup()
 	api.system.lpm.set(1);
 
 	// Configure PT100 sensor
+	pinMode(Max_CS, OUTPUT);
 	has_rak12022 = maxTemp.begin(Max_CS, MAX31865_3WIRE, MAX31865_PT100); // depending on sensor type, choose MAX31865_2WIRE, MAX31865_3WIRE or MAX31865_4WIRE)
 	if (has_rak12022)
 	{

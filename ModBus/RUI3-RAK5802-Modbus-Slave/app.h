@@ -20,27 +20,21 @@
 
 #if MY_DEBUG > 0
 #if defined(_VARIANT_RAK3172_) || defined(_VARIANT_RAK3172_SIP_)
-#define MYLOG(tag, ...)                  \
-	do                                   \
-	{                                    \
-		if (tag)                         \
-			Serial.printf("[%s] ", tag); \
-		Serial.printf(__VA_ARGS__);      \
-		Serial.printf("\n");             \
-	} while (0);                         \
-	delay(100)
-#else // RAK4630 || RAK11720
-#define MYLOG(tag, ...)                  \
-	do                                   \
-	{                                    \
-		if (tag)                         \
-			Serial.printf("[%s] ", tag); \
-		Serial.printf(__VA_ARGS__);      \
-		Serial.printf("\r\n");           \
-		Serial6.printf(__VA_ARGS__);     \
-		Serial6.printf("\r\n");          \
-	} while (0);                         \
-	delay(100)
+#define MYLOG(tag, ...)              \
+	if (tag)                         \
+		Serial.printf("[%s] ", tag); \
+	Serial.printf(__VA_ARGS__);      \
+	Serial.printf("\n");
+#else // RAK4630 or RAK11720
+#define MYLOG(tag, ...)              \
+	if (tag)                         \
+		Serial.printf("[%s] ", tag); \
+	Serial.printf(__VA_ARGS__);      \
+	Serial.printf("\r\n");           \
+	Serial.flush();                  \
+	Serial6.printf(__VA_ARGS__);     \
+	Serial6.printf("\r\n");          \
+	Serial6.flush();
 #endif
 #else
 #define MYLOG(...)

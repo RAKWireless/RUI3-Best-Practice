@@ -116,7 +116,7 @@ void setup()
 	}
 
 	// Disconnect from network, just in case
-	// api.lorawan.join(0, 0, 6, 0);
+	api.lorawan.join(0, 0, 6, 0);
 
 	// Setup the callbacks for joined and send finished
 	api.lorawan.registerRecvCallback(receiveCallback);

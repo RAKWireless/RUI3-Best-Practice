@@ -17,6 +17,8 @@
 #define FAULT_CHECK_COUNT 4			 // if four protection interrupts detected within 5 seconds, Sensor may be thermal shutdown or Overcurrent and short-circuit protections
 #define FAULT_CHECK_INTERVAL 5000	 // Check value in [ms] ,
 
+#define MIN_SPEED 10 // Minimum accepted speed. change to matching value after testing with motor.
+
 /** Error counter */
 volatile uint16_t error_counter = 0;
 /** Time since last error */
@@ -96,8 +98,8 @@ void parse_command(uint8_t *data, uint8_t size)
 			// Get new value
 			rcvd_value = data[3];
 			rcvd_direction = data[4];
-			// Check speed. 40 is difficult with some motors, needs calibration with specific motor.
-			if (rcvd_value >= 40)
+			// Check speed. MIN_SPEED needs calibration with specific motor.
+			if (rcvd_value >= MIN_SPEED)
 			{
 				motor_speed = rcvd_value;
 			}
@@ -296,14 +298,15 @@ void setup(void)
 
 	// Setup STSPIN250
 	Serial.println("Setup H-Bridge");
+	pinMode(STSPIN250_EN, OUTPUT);
+	digitalWrite(STSPIN250_EN, LOW); // if set STSPIN250_EN High,sensor work normal.if set LOW, Sensors enter low power mode.
+
 	pinMode(STSPIN250_PH, OUTPUT);
 	digitalWrite(STSPIN250_PH, motor_turn_clockwise);
 
+	Serial.println("Set speed to 0");
 	pinMode(STSPIN250_PWM, OUTPUT);
 	analogWrite(STSPIN250_PWM, 0);
-
-	pinMode(STSPIN250_EN, OUTPUT);
-	digitalWrite(STSPIN250_EN, LOW); // if set STSPIN250_EN High,sensor work normal.if set LOW, Sensors enter low power mode.
 
 	pinMode(STSPIN250_FAULT_CHECK, INPUT);
 	attachInterrupt(digitalPinToInterrupt(STSPIN250_FAULT_CHECK), motor_interrupt, FALLING);

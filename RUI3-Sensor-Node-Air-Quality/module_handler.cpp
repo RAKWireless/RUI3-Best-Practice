@@ -27,7 +27,7 @@ void find_modules(void)
 	byte error;
 
 	Wire.begin();
-	Wire.setClock(400000);
+	// Wire.setClock(400000);
 	for (byte address = 1; address < 127; address++)
 	{
 		Wire.beginTransmission(address);
@@ -53,7 +53,7 @@ void find_modules(void)
 		}
 	}
 
-	if (has_rak1901)
+	if (has_rak1901 || has_rak1906)
 	{
 		if (init_rak1901())
 		{
@@ -142,6 +142,11 @@ void get_sensor_values(void)
 		read_rak1901();
 	}
 
+	if (has_rak1906)
+	{
+		// Reading sensor data
+		read_rak1906();
+	}
 	if (has_rak12037)
 	{
 		// Read sensor data

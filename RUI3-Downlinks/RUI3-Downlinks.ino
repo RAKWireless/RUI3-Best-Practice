@@ -37,6 +37,7 @@ void joinCallback(int32_t status)
 	{
 		MYLOG("JOIN-CB", "LoRaWan OTAA - joined! \r\n");
 		digitalWrite(LED_BLUE, LOW);
+		api.system.lpm.set(1);
 	}
 }
 
@@ -276,7 +277,7 @@ void setup()
 		sensor_handler(NULL);
 	}
 
-	api.system.lpm.set(1);
+	// api.system.lpm.set(1);
 
 #if defined(_VARIANT_RAK3172_) || defined(_VARIANT_RAK3172_SIP_)
 // No BLE

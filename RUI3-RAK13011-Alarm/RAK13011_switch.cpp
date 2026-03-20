@@ -22,7 +22,7 @@
 // Slot F      WB_IO6
 //******************************************************************//
 
-#define RAK13011_SLOT 'A'
+#define RAK13011_SLOT 'C'
 
 /** Interrupt pin, depends on slot */
 // #include "RAK13011_switch_S_A.h"

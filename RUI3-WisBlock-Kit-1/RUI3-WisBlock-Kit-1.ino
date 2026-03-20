@@ -168,7 +168,7 @@ void setup()
 	digitalWrite(WB_IO2, HIGH);
 
 	// Start Serial
-	Serial.begin(115200);
+	Serial.begin(115200, RAK_AT_MODE);
 
 	// Delay for 5 seconds to give the chance for AT+BOOT
 	delay(5000);
@@ -180,6 +180,8 @@ void setup()
 	Serial.println("Setup the device with WisToolBox or AT commands before using it");
 	Serial.printf("Version %s\n", api.system.firmwareVersion.get().c_str());
 	Serial.println("------------------------------------------------------");
+
+	Serial.flush();
 
 	// Initialize module
 	Wire.begin();

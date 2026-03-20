@@ -11,28 +11,21 @@
 #include "app.h"
 
 #if defined(_VARIANT_RAK3172_) || defined(_VARIANT_RAK3172_SIP_)
-#define AT_PRINTF(...)              \
-	do                              \
-	{                               \
-		Serial.printf(__VA_ARGS__); \
-		Serial.printf("\r\n");        \
-	} while (0);                    \
-	delay(100)
-#else // RAK4630 || RAK11720
-#define AT_PRINTF(...)               \
-	do                               \
-	{                                \
-		Serial.printf(__VA_ARGS__);  \
-		Serial.printf("\r\n");         \
-		Serial6.printf(__VA_ARGS__); \
-		Serial6.printf("\r\n");        \
-	} while (0);                     \
-	delay(100)
+#define AT_PRINTF(...)          \
+	Serial.printf(__VA_ARGS__); \
+	Serial.printf("\r\n");
+#else // RAK4630 or RAK11720
+#define AT_PRINTF(...)           \
+	Serial.printf(__VA_ARGS__);  \
+	Serial.printf("\r\n");       \
+	Serial.flush();              \
+	Serial6.printf(__VA_ARGS__); \
+	Serial6.printf("\r\n");      \
+	Serial6.flush();
 #endif
 
 /** Custom flash parameters */
 custom_param_s custom_parameters;
-
 
 // Forward declarations
 int interval_send_handler(SERIAL_PORT port, char *cmd, stParam *param);
@@ -99,8 +92,8 @@ int interval_send_handler(SERIAL_PORT port, char *cmd, stParam *param)
 		// Save custom settings if needed
 		if (old_send_freq != custom_parameters.send_interval)
 		{
-		save_at_setting();
-	}
+			save_at_setting();
+		}
 	}
 	else
 	{
